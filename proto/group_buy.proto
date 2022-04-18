@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package example;
+import 'record_metadata_options.proto';
+
+message Person {
+  int32 id = 1 [ (webaas.db.record.field).primary_key = true ];
+  string name = 2 [ (webaas.db.record.field).index = {} ];
+  string email = 3;
+  repeated int32 notificationIds = 4;
+
+  enum PhoneType {
+    NONE = 0;
+    MOBILE = 1;
+    HOME = 2;
+    WORK = 3;
+  }
+
+  message PhoneNumber {
+    string number = 1;
+    PhoneType type = 2;
+  }
+
+  repeated PhoneNumber phones = 5;
+}
+
+message Group {
+  int32 id = 1 [ (webaas.db.record.field).primary_key = true ];
+  string name = 2;
+  string description = 3;
+  repeated Person people = 4;
+}
