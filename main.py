@@ -5,9 +5,9 @@ import sys
 import group_buy_pb2
 import websockets
 import json
+from google.protobuf.json_format import Parse
 
-
-endpoint = "http://202.120.40.82:11233"
+endpoint = "http://localhost:8000"
 appName = "python-crud"+str(uuid.uuid4())  # unique app name
 appID = None
 personId = -1
@@ -56,6 +56,7 @@ def create_person(person: group_buy_pb2.Person):
     global personId
     print("Creating person...")
     print(person.SerializeToString())
+    print(person)
     r = requests.post(endpoint+"/record", params={
         "appID": appID, "schemaName": "example.Person"}, data=person.SerializeToString())
     if r.status_code != 200:
@@ -124,9 +125,7 @@ def get_person(person_id):
     if r.status_code != 200:
         print("Error getting person: "+r.text)
         return None
-    person = group_buy_pb2.Person()
-    print(bytes(r.json()["record_value"], "utf-8"))
-    person.ParseFromString(bytes(r.json()["record_value"], "utf-8"))
+    person = Parse(r.json()['record_value'],group_buy_pb2.Person())
     return person
 
 
@@ -136,8 +135,7 @@ def get_group(group_id):
     if r.status_code != 200:
         print("Error getting group: "+r.text)
         sys.exit(1)
-    group = group_buy_pb2.Group()
-    group.ParseFromString(bytes(r.json()["record_value"], "utf-8"))
+    group = Parse(r.json()['record_value'],group_buy_pb2.Group())
     return group
 
 def get_groups():
