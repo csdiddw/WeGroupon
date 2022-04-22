@@ -7,7 +7,7 @@ import websockets
 import json
 from google.protobuf.json_format import Parse
 
-endpoint = "http://localhost:8000"
+endpoint = "http://202.120.40.82:11233"
 appName = "python-crud"+str(uuid.uuid4())  # unique app name
 appID = None
 personId = -1
