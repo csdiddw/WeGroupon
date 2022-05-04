@@ -74,7 +74,7 @@ def get_group(g_id):
     if r.status_code != 200:
         handle_error_msg(r)
         return None
-    group = Parse(r.json()['record_value'], group_purchase_pb2.Group())
+    group = group_purchase_pb2.Group().ParseFromString(r.content)
     return group
 
 def put_customer(customer: group_purchase_pb2.Customer):
@@ -89,7 +89,7 @@ def get_customer(c_id):
     if r.status_code != 200:
         handle_error_msg(r)
         return None
-    customer = Parse(r.json()['record_value'], group_purchase_pb2.Customer())
+    customer = group_purchase_pb2.Customer().ParseFromString(r.content)
     return customer
 
 def put_itemhistory(itemhistory: group_purchase_pb2.ItemHistory):
@@ -104,7 +104,7 @@ def get_itemhistory(i_id):
     if r.status_code != 200:
         handle_error_msg(r)
         return None
-    itemhistory = Parse(r.json()['record_value'], group_purchase_pb2.ItemHistory())
+    itemhistory = group_purchase_pb2.ItemHistory().ParseFromString(r.content)
     return itemhistory
 
 def put_audit(audit: group_purchase_pb2.Audit):
@@ -119,7 +119,7 @@ def get_audit(g_id):
     if r.status_code != 200:
         handle_error_msg(r)
         return None
-    audit = Parse(r.json()['record_value'], group_purchase_pb2.Audit())
+    audit = group_purchase_pb2.Audit().ParseFromString(r.content)
     return audit
 
 def get_notificationId(g_id):
