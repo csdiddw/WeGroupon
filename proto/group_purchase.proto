@@ -4,23 +4,17 @@ package group_purchase;
 import 'record_metadata_options.proto';
 import 'google/protobuf/timestamp.proto';
 
-message G_Item{
-    int32 g_i_id = 1;
-    string g_i_name = 2;
-    string g_i_description = 4;
-    int32 g_i_count = 3;
-    double g_i_price = 5;
-}
+message G_Participator {
 
-message G_P_Item{
-   int32 g_p_id = 1;
-   int32 g_p_count = 2;
-   double g_p_price = 3;
-}
+  int32 g_p_id = 1;
 
-message G_Participator{
+  message G_P_Item {
     int32 g_p_id = 1;
-    repeated G_P_Item g_p_items = 2;
+    int32 g_p_count = 2;
+    double g_p_price = 3;
+  }
+
+  repeated G_P_Item g_p_items = 2;
 }
 
 enum G_Status {
@@ -31,21 +25,31 @@ enum G_Status {
 }
 
 message Group {
-    int32 g_id = 1 [ (webaas.db.record.field).primary_key = true ];
-    string g_name = 2;
-    string g_description = 3;
-    int32 g_owner_id = 4;
-    google.protobuf.Timestamp g_created_at = 5;
-    google.protobuf.Timestamp g_finished_at = 6;
-    repeated G_Item g_items = 7;
-    G_Status g_status = 8;
-    repeated G_Participator g_participators = 9;
+  int32 g_id = 1 [ (webaas.db.record.field).primary_key = true ];
+  string g_name = 2;
+  string g_description = 3;
+  int32 g_owner_id = 4;
+  google.protobuf.Timestamp g_created_at = 5;
+  google.protobuf.Timestamp g_finished_at = 6;
+
+  message G_Item {
+    int32 g_i_id = 1;
+    string g_i_name = 2;
+    string g_i_description = 4;
+    int32 g_i_count = 3;
+    double g_i_price = 5;
+  }
+
+  repeated G_Item g_items = 7;
+
+  G_Status g_status = 8;
+  repeated G_Participator g_participators = 9;
 }
-  
+
 message Customer {
   int32 c_id = 1 [ (webaas.db.record.field).primary_key = true ];
-  string c_name = 2 ;
-  string c_email = 3;
+  string c_name = 2;
+  string c_phone = 3;
   repeated int32 c_owned_groups = 4;
   repeated int32 c_participated_groups = 5;
 }
@@ -58,7 +62,7 @@ message ItemHistory {
   int32 i_count = 5;
 }
 
-message Audit{
+message Audit {
   int32 a_id = 1 [ (webaas.db.record.field).primary_key = true ];
   int32 a_sender_id = 2;
   int32 a_receiver_id = 3;

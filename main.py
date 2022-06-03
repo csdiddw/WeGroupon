@@ -3,6 +3,9 @@
 import group_purchase_pb2
 import webaas_client as wc
 
+personId = -1
+
+
 def register_customer():
     customer = group_purchase_pb2.Customer()
     customer.c_id = int(input("Enter your customer ID: "))
@@ -10,7 +13,7 @@ def register_customer():
         print("Customer already exists")
         return
     customer.c_name = input("Enter customer name: ")
-    customer.c_email = input("Enter customer email: ")
+    customer.c_phone = input("Enter customer phone: ")
     wc.put_customer(customer)
 
 
@@ -18,7 +21,8 @@ def group_update(group: group_purchase_pb2.Group):
     group.name = input("Enter group name: ")
     group.description = input("Enter group description: ")
     while True:
-        person_id = input("Enter customer ID to add to group (blank to finish): ")
+        person_id = input(
+            "Enter customer ID to add to group (blank to finish): ")
         if person_id == "":
             break
         add_person_to_group(group.id, person_id)
@@ -30,6 +34,7 @@ def get_groups():
     print("not implemented yet")
     return
 
+
 def add_person_to_group(group_id, person_id):
     group = wc.get_group(group_id)
     new_person = group.people.add()
@@ -39,21 +44,24 @@ def add_person_to_group(group_id, person_id):
     wc.put_customer(new_person)
     wc.put_group(group)
 
+
 async def listen(person_id):
     print("Listening for updates...")
     customer = wc.get_customer(person_id)
     for n_id in customer.notificationIds:
-       wc.listen_msg(n_id)
+        wc.listen_msg(n_id)
+
 
 def notify(g_id):
     group = wc.get_group(g_id)
     group.description = "Group buy has been completed!"
     wc.put_group(group)
 
+
 def main():
     global personId
-    # wc.register_app()
-    # wc.create_schema()
+    wc.register_app()
+    wc.create_schema()
     print("\nWelcome to the group buy application")
     while True:
         print("\nPlease tell me what you want to do")
@@ -132,7 +140,7 @@ def main():
         elif choice == 10:
             group = wc.get_group(group.id)
             print("{}".format(group))
-        elif choice ==11:
+        elif choice == 11:
             break
 
 
