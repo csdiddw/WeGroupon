@@ -74,7 +74,8 @@ def get_group(g_id):
     if r.status_code != 200:
         handle_error_msg(r)
         return None
-    group = group_purchase_pb2.Group().ParseFromString(r.content)
+    group = group_purchase_pb2.Group()
+    group.ParseFromString(r.content)
     return group
 
 def put_customer(customer: group_purchase_pb2.Customer):

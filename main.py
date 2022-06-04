@@ -37,12 +37,16 @@ def get_groups():
 
 def add_person_to_group(group_id, person_id):
     group = wc.get_group(group_id)
-    new_person = group.people.add()
-    customer = wc.get_person(person_id)
-    new_person.CopyFrom(customer)
-    new_person.notificationIds.append(wc.get_notificationId(group_id))
-    wc.put_customer(new_person)
+    if group is None:
+        return
+    customer = wc.get_customer(person_id)
+    if customer is None:
+        return
+    participator = group.g_participators.add()
+    participator.g_p_id = person_id
+    customer.c_participated_groups.append(person_id)
     wc.put_group(group)
+    wc.put_customer(customer)
 
 
 async def listen(person_id):
@@ -114,11 +118,11 @@ def main():
                 print("Please login first")
         elif choice == 6:
             group = group_purchase_pb2.Group()
-            group.id = int(input("Enter group ID: "))
-            group.name = input("Enter group name: ")
-            group.description = input("Enter group description: ")
+            group.g_id = int(input("Enter group ID: "))
+            group.g_name = input("Enter group name: ")
+            group.g_description = input("Enter group description: ")
             wc.put_group(group)
-            add_person_to_group(group.id, personId)
+            add_person_to_group(group.g_id, personId)
         elif choice == 7:
             group_id = int(input("Enter group ID: "))
             group = wc.get_group(group_id)
