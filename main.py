@@ -2,6 +2,7 @@
 
 
 import asyncio
+import sys
 import group_purchase_pb2 as gp
 import webaas_client as wc
 from aioconsole import ainput
@@ -13,9 +14,9 @@ cur_c_id = None
 async def register():
     c_id = int(await ainput("Enter customer ID: "))
     
-    txid = wc.tx_begin()
+    tx_id = wc.tx_begin()
     
-    if wc.tx_get(txid, gp.Customer, c_id) is not None:
+    if wc.tx_get(tx_id, gp.Customer, c_id) is not None:
         print(f"Customer {c_id} already exists")
         wc.tx_abort()
         return
@@ -24,9 +25,9 @@ async def register():
     customer.c_id = c_id
     customer.c_name = await ainput("Enter customer name: ")
     customer.c_phone = await ainput("Enter customer phone: ")
-    wc.tx_put(txid, customer)
+    wc.tx_put(tx_id, customer)
     
-    wc.tx_commit(txid)
+    wc.tx_commit(tx_id)
 
 
 async def login():
@@ -47,8 +48,11 @@ ops = [
 
 
 async def main():
-    wc.register_app("group_purchase")
-    wc.create_schema("proto/group_purchase.proto")
+    if len(sys.argv) == 1:
+        wc.register_app("group_purchase")
+        wc.create_schema("proto/group_purchase.proto")
+    else:
+        wc.register_app("group_purchase", sys.argv[1])
     
     print("\nWelcome to the group buy application")
     while True:

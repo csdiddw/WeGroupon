@@ -11,13 +11,16 @@ def bug_on(cond):
         raise RuntimeError()
 
 
-def register_app(app_name_):
+def register_app(app_name_, app_id_=None):
     global app_id
     global app_name
-    r = requests.post(f"{endpoint}/app", params={"appName": app_name_})
-    bug_on(r.status_code != 200)
-    app_id = r.json()["appID"]
+    if app_id_ is None:
+        r = requests.post(f"{endpoint}/app", params={"appName": app_name_})
+        bug_on(r.status_code != 200)
+        app_id_ = r.json()["appID"]
+    app_id = app_id_
     app_name = app_name_
+    print(f"App ID: {app_id}")
 
 
 def create_schema(schema_file):
@@ -36,19 +39,19 @@ def tx_begin():
     return r.json()["transactionID"]
 
 
-def tx_abort(txid):
-    r = requests.post(f"{endpoint}/transaction", params={"action": "abort", "transactionID": txid})
+def tx_abort(tx_id):
+    r = requests.post(f"{endpoint}/transaction", params={"action": "abort", "transactionID": tx_id})
     bug_on(r.status_code != 200)
 
 
-def tx_commit(txid):
-    r = requests.post(f"{endpoint}/transaction", params={"action": "commit", "transactionID": txid})
+def tx_commit(tx_id):
+    r = requests.post(f"{endpoint}/transaction", params={"action": "commit", "transactionID": tx_id})
     bug_on(r.status_code != 200)
 
 
-def tx_get(txid, schema, key):
+def tx_get(tx_id, schema, key):
     r = requests.get(f"{endpoint}/query/transactional",
-                     params={"appID": app_id, "schemaName": f"{app_name}.{schema.__name__}", "transactionID": txid, "recordKey": key})
+                     params={"appID": app_id, "schemaName": f"{app_name}.{schema.__name__}", "transactionID": tx_id, "recordKey": key})
     if r.status_code == 200:
         record = schema()
         record.ParseFromString(r.content)
@@ -58,9 +61,9 @@ def tx_get(txid, schema, key):
         return None
     
 
-def tx_put(txid, record):
+def tx_put(tx_id, record):
     r = requests.post(f"{endpoint}/record/transactional", data=record.SerializeToString(),
-                      params={"appID": app_id, "schemaName": f"{app_name}.{type(record).__name__}", "transactionID": txid})
+                      params={"appID": app_id, "schemaName": f"{app_name}.{type(record).__name__}", "transactionID": tx_id})
     bug_on(r.status_code != 200)
 
 
