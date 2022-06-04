@@ -89,7 +89,8 @@ def get_customer(c_id):
     if r.status_code != 200:
         handle_error_msg(r)
         return None
-    customer = group_purchase_pb2.Customer().ParseFromString(r.content)
+    customer = group_purchase_pb2.Customer()
+    customer.ParseFromString(r.content)
     return customer
 
 def put_itemhistory(itemhistory: group_purchase_pb2.ItemHistory):
