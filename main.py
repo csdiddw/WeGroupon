@@ -29,12 +29,6 @@ def group_update(group: group_purchase_pb2.Group):
     wc.put_group(group)
 
 
-def get_groups():
-    print("Getting groups...")
-    print("not implemented yet")
-    return
-
-
 def add_person_to_group(group_id, person_id):
     group = wc.get_group(group_id)
     if group is None:
@@ -142,8 +136,8 @@ def main():
             group_id = int(input("Enter group ID: "))
             notify(group_id)
         elif choice == 10:
-            group = wc.get_group(group.id)
-            print("{}".format(group))
+            groups = wc.get_groups()
+            print("{}".format(groups))
         elif choice == 11:
             break
 

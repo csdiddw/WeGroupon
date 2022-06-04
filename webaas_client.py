@@ -7,6 +7,7 @@ import websockets
 import json
 import logging
 from google.protobuf.json_format import Parse
+from google.protobuf.internal.decoder import _DecodeVarint32
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
@@ -77,6 +78,25 @@ def get_group(g_id):
     group = group_purchase_pb2.Group()
     group.ParseFromString(r.content)
     return group
+
+def get_groups():
+    groups = []
+    r = requests.get(endpoint+"/query",
+                    params={"appID": appID, "schemaName": group_schema, "range": True, "beginKey": "0", "endKey": "9999", "iteration": 1})
+    if r.status_code != 200:
+        handle_error_msg(r)
+        return None
+    n = 0
+    buf = r.content
+    while n < len(buf):
+        msg_len, new_pos = _DecodeVarint32(buf, n)
+        n = new_pos
+        msg_buf = buf[n:n+msg_len]
+        n += msg_len
+        group = group_purchase_pb2.Group()
+        if group.ParseFromString(msg_buf) != 0:
+            groups.append(group)
+    return groups
 
 def put_customer(customer: group_purchase_pb2.Customer):
     r = requests.post(endpoint+"/record", params={
