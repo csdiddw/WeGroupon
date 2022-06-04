@@ -1,146 +1,63 @@
 #!/usr/bin/env python3
 
-import group_purchase_pb2
+
+import asyncio
+import group_purchase_pb2 as gp
 import webaas_client as wc
+from aioconsole import ainput
 
-personId = -1
+
+cur_c_id = None
 
 
-def register_customer():
-    customer = group_purchase_pb2.Customer()
-    customer.c_id = int(input("Enter your customer ID: "))
-    if(wc.get_customer(customer.c_id) != None):
-        print("Customer already exists")
+async def register():
+    c_id = int(await ainput("Enter customer ID: "))
+    
+    txid = wc.tx_begin()
+    
+    if wc.tx_get(txid, gp.Customer, c_id) is not None:
+        print(f"Customer {c_id} already exists")
+        wc.tx_abort()
         return
-    customer.c_name = input("Enter customer name: ")
-    customer.c_phone = input("Enter customer phone: ")
-    wc.put_customer(customer)
+    
+    customer = gp.Customer()
+    customer.c_id = c_id
+    customer.c_name = await ainput("Enter customer name: ")
+    customer.c_phone = await ainput("Enter customer phone: ")
+    wc.tx_put(txid, customer)
+    
+    wc.tx_commit(txid)
 
 
-def group_update(group: group_purchase_pb2.Group):
-    group.name = input("Enter group name: ")
-    group.description = input("Enter group description: ")
-    while True:
-        person_id = input(
-            "Enter customer ID to add to group (blank to finish): ")
-        if person_id == "":
-            break
-        add_person_to_group(group.id, person_id)
-    wc.put_group(group)
-
-
-def add_person_to_group(group_id, person_id):
-    group = wc.get_group(group_id)
-    if group is None:
-        return
-    customer = wc.get_customer(person_id)
+async def login():
+    global cur_c_id
+    c_id = int(await ainput("Enter customer ID: "))
+    customer = wc.get(gp.Customer, c_id)
     if customer is None:
-        return
-    participator = group.g_participators.add()
-    participator.g_p_id = person_id
-    customer.c_participated_groups.append(person_id)
-    wc.put_group(group)
-    wc.put_customer(customer)
+        print(f"Customer {c_id} not found")
+    else:
+        cur_c_id = c_id
 
 
-async def listen(person_id):
-    print("Listening for updates...")
-    customer = wc.get_customer(person_id)
-    for n_id in customer.notificationIds:
-        wc.listen_msg(n_id)
+ops = [
+    (register, "Register"),
+    (login, "Login"),
+    (exit, "Exit")
+]
 
 
-def notify(g_id):
-    group = wc.get_group(g_id)
-    group.description = "Group buy has been completed!"
-    wc.put_group(group)
-
-
-def main():
-    global personId
-    wc.register_app()
-    wc.create_schema()
+async def main():
+    wc.register_app("group_purchase")
+    wc.create_schema("proto/group_purchase.proto")
+    
     print("\nWelcome to the group buy application")
     while True:
         print("\nPlease tell me what you want to do")
-        print("1. Register")
-        print("2. Login")
-        print("3. Check personal information")
-        print("4. Update personal information")
-        print("5. Join a group")
-        print("6. Create a group")
-        print("7. Check group information")
-        print("8. Update group information")
-        print("9. Notify customer in group")
-        print("10. Get all group")
-        print("11. Exit")
-        choice = int(input("Enter choice: "))
-        if choice == 1:
-            register_customer()
-        elif choice == 2:
-            id = int(input("Enter customer ID: "))
-            customer = wc.get_customer(id)
-            if customer != None:
-                print("{}".format(customer))
-                personId = id
-            else:
-                print("Customer not found")
-        elif choice == 3:
-            if personId != -1:
-                customer = wc.get_customer(personId)
-                if customer != None:
-                    print("{}".format(customer))
-                else:
-                    print("Customer not found")
-            else:
-                print("Please login first")
-        elif choice == 4:
-            if personId != -1:
-                customer = wc.get_customer(personId)
-                if customer != None:
-                    print("{}".format(customer))
-                    wc.put_customer(customer)
-                else:
-                    print("Customer not found")
-            else:
-                print("Please login first")
-        elif choice == 5:
-            if personId != -1:
-                group_id = int(input("Enter group ID: "))
-                add_person_to_group(group_id, personId)
-            else:
-                print("Please login first")
-        elif choice == 6:
-            group = group_purchase_pb2.Group()
-            group.g_id = int(input("Enter group ID: "))
-            group.g_name = input("Enter group name: ")
-            group.g_description = input("Enter group description: ")
-            wc.put_group(group)
-            add_person_to_group(group.g_id, personId)
-        elif choice == 7:
-            group_id = int(input("Enter group ID: "))
-            group = wc.get_group(group_id)
-            if group != None:
-                print("{}".format(group))
-            else:
-                print("Group not found")
-        elif choice == 8:
-            group_id = int(input("Enter group ID: "))
-            group = wc.get_group(group_id)
-            if group != None:
-                print("{}".format(group))
-                group_update(group)
-            else:
-                print("Group not found")
-        elif choice == 9:
-            group_id = int(input("Enter group ID: "))
-            notify(group_id)
-        elif choice == 10:
-            groups = wc.get_groups()
-            print("{}".format(groups))
-        elif choice == 11:
-            break
+        for (op_idx, (_, op_desc)) in enumerate(ops):
+            print(f"{op_idx}. {op_desc}")
+        op_idx = int(await ainput("Enter choice: "))
+        await ops[op_idx][0]()
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
