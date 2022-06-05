@@ -1,144 +1,138 @@
-from cgitb import handler
-from cmath import log
 import requests
-import sys
-import group_purchase_pb2
 import websockets
 import json
-import logging
-from google.protobuf.json_format import Parse
-
-logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
-
-endpoint = "http://tea2:8000"
-back_endpoint = "http://202.120.40.82:11232"
-appName = "group_purchase"  # unique app name
-appID = "71575aec-bfa8-45e7-b355-299a08d96f4c"
-personId = -1
-
-group_schema = appName+".Group"
-customer_schema = appName+".Customer"
-itemhistory_schema = appName+".ItemHistory"
-audit_schema = appName+".Audit"
+import dto_pb2 as dto
 
 
-def register_app():
-    global appID
-    global endpoint
-    logging.info("Registering app " + appName)
-    try:
-        r = requests.post(endpoint+"/app", params={"appName": appName})
-        if r.status_code == 200:
-            appID = r.json()["appID"]
-            logging.info("App registered with ID: " + appID)
-        else:
-            logging.error("Error registering app: " + r.text)
-            sys.exit(1)
-    except Exception as e:
-        logging.warning("Error registering app: " + str(e))
-        if(endpoint == back_endpoint):
-            logging.error("error in register_app")
-            exit(1)
-        else:
-            logging.warning("try to register app in back_endpoint")
-            endpoint = back_endpoint
-            register_app()
+http_endpoint = "http://tea2:8000"
+ws_endpoint = "ws://tea2:8000"
+app_id = None
+app_name = None
 
-def create_schema():
-    logging.info("Creating schema...")
-    # upload schema file
-    with open("proto/group_purchase.proto", "rb") as f:
-        r = requests.put(endpoint+"/schema", data=f.read(), params={
-                         "appID": appID, "fileName": "group_purchase.proto", "version": "1.0.0"})
-        if r.status_code != 200:
-            logging.error("Error creating schema: "+r.text)
-            sys.exit(1)
-    logging.info("Schema file uploaded.")
-    # update schema version
-    r = requests.post(endpoint+"/schema",
-                      params={"appID": appID, "version": "1.0.0"})
-    if r.status_code != 200:
-        logging.error("Error updating schema version: "+r.text)
-        sys.exit(1)
-    logging.info("Schema version updated.")
 
-def put_group(group: group_purchase_pb2.Group):
-    r = requests.post(endpoint+"/record", params={
-                      "appID": appID, "schemaName": group_schema}, data=group.SerializeToString())
-    if r.status_code != 200:
-        handle_error_msg(r)
+def bug_on(cond):
+    if cond:
+        raise RuntimeError()
 
-def get_group(g_id):
-    r = requests.get(endpoint+"/query",
-                     params={"appID": appID, "schemaName": group_schema, "recordKey": g_id})
-    if r.status_code != 200:
-        handle_error_msg(r)
+
+def register_app(app_name_, app_id_=None):
+    global app_id
+    global app_name
+    if app_id_ is None:
+        r = requests.post(f"{http_endpoint}/app",
+                          params={"appName": app_name_})
+        bug_on(r.status_code != 200)
+        app_id_ = r.json()["appID"]
+    app_id = app_id_
+    app_name = app_name_
+    print(f"App ID: {app_id}")
+
+
+def create_schema(schema_file):
+    with open(schema_file, "rb") as f:
+        r = requests.put(f"{http_endpoint}/schema", data=f.read(),
+                         params={"appID": app_id, "fileName": schema_file, "version": "1.0.0"})
+        bug_on(r.status_code != 200)
+    r = requests.post(http_endpoint+"/schema",
+                      params={"appID": app_id, "version": "1.0.0"})
+    bug_on(r.status_code != 200)
+
+
+def tx_begin():
+    r = requests.post(f"{http_endpoint}/transaction",
+                      params={"action": "begin"})
+    bug_on(r.status_code != 200)
+    return r.json()["transactionID"]
+
+
+def tx_abort(tx_id):
+    r = requests.post(f"{http_endpoint}/transaction",
+                      params={"action": "abort", "transactionID": tx_id})
+    bug_on(r.status_code != 200)
+
+
+def tx_commit(tx_id):
+    r = requests.post(f"{http_endpoint}/transaction",
+                      params={"action": "commit", "transactionID": tx_id})
+    bug_on(r.status_code != 200)
+
+
+def tx_get(tx_id, schema, key):
+    r = requests.get(f"{http_endpoint}/query/transactional",
+                     params={"appID": app_id, "schemaName": f"{app_name}.{schema.__name__}", "transactionID": tx_id, "recordKey": key})
+    if r.status_code == 200:
+        record = schema()
+        record.ParseFromString(r.content)
+        return record
+    else:
+        bug_on(r.json()["code"] != 1002)
         return None
-    group = group_purchase_pb2.Group().ParseFromString(r.content)
-    return group
 
-def put_customer(customer: group_purchase_pb2.Customer):
-    r = requests.post(endpoint+"/record", params={
-                      "appID": appID, "schemaName": customer_schema}, data=customer.SerializeToString())
-    if r.status_code != 200:
-        handle_error_msg(r)
 
-def get_customer(c_id):
-    r = requests.get(endpoint+"/query",
-                     params={"appID": appID, "recordKey": c_id, "schemaName": customer_schema})
-    if r.status_code != 200:
-        handle_error_msg(r)
+def tx_put(tx_id, record):
+    r = requests.post(f"{http_endpoint}/record/transactional", data=record.SerializeToString(),
+                      params={"appID": app_id, "schemaName": f"{app_name}.{type(record).__name__}", "transactionID": tx_id})
+    print(r.status_code)
+    bug_on(r.status_code != 200)
+
+
+def get(schema, key):
+    r = requests.get(f"{http_endpoint}/query",
+                     params={"appID": app_id, "schemaName": f"{app_name}.{schema.__name__}", "recordKey": key})
+    if r.status_code == 200:
+        record = schema()
+        record.ParseFromString(r.content)
+        return record
+    else:
+        bug_on(r.json()["code"] != 1002)
         return None
-    customer = group_purchase_pb2.Customer().ParseFromString(r.content)
-    return customer
 
-def put_itemhistory(itemhistory: group_purchase_pb2.ItemHistory):
-    r = requests.post(endpoint+"/record", params={
-                      "appID": appID, "schemaName": itemhistory_schema}, data=itemhistory.SerializeToString())
-    if r.status_code != 200:
-        handle_error_msg(r)
 
-def get_itemhistory(i_id):
-    r = requests.get(endpoint+"/query",
-                        params={"appID": appID, "recordKey": i_id, "schemaName": itemhistory_schema})
-    if r.status_code != 200:
-        handle_error_msg(r)
-        return None
-    itemhistory = group_purchase_pb2.ItemHistory().ParseFromString(r.content)
-    return itemhistory
+def parse_range_query_result(schema, buf):
+    more = bool(buf[0])
+    buf = buf[1:]
 
-def put_audit(audit: group_purchase_pb2.Audit):
-    r = requests.post(endpoint+"/record", params={
-                        "appID": appID, "schemaName": audit_schema}, data=audit.SerializeToString())
-    if r.status_code != 200:
-        handle_error_msg(r)
+    records = []
+    while len(buf) > 0:
+        size = buf[0] * 256 + buf[1]
+        record = schema()
+        record.ParseFromString(buf[2:2 + size])
+        buf = buf[2 + size:]
+        records.append(record)
 
-def get_audit(g_id):
-    r = requests.get(endpoint+"/query",
-                        params={"appID": appID, "recordKey": g_id, "schemaName": audit_schema})
-    if r.status_code != 200:
-        handle_error_msg(r)
-        return None
-    audit = group_purchase_pb2.Audit().ParseFromString(r.content)
-    return audit
+    return records, more
 
-def get_notificationId(g_id):
-    data = {
-        "appID": appID, "schemaName": "example.Group", "recordKeys": [str(g_id)]
-    }
-    print(json.dumps(data))
-    r = requests.post(endpoint+"/notification", data=json.dumps(data))
 
-    if r.status_code != 200:
-        handle_error_msg(r)
-    return int(r.json()["notificationID"])
+def get_range(schema, begin_key, end_key, itr):
+    r = requests.get(http_endpoint+"/query",
+                     params={"appID": app_id, "schemaName": f"{app_name}.{schema.__name__}", "range": True, "beginKey": begin_key, "endKey": end_key, "iteration": itr})
+    bug_on(r.status_code != 200)
+    return parse_range_query_result(schema, r.content)
 
-async def listen_msg(n_id):
-    async with websockets.connect(
-            endpoint + 'notification', params={
-                "appID": appID, "notificationID": n_id}) as websocket:
-        msg = await websocket.recv()
-        print(msg)
 
-def handle_error_msg(msg):
-   logging.warning(msg.json()["message"])
+def put(record):
+    r = requests.post(f"{http_endpoint}/record", data=record.SerializeToString(),
+                      params={"appID": app_id, "schemaName": f"{app_name}.{type(record).__name__}"})
+    bug_on(r.status_code != 200)
+
+
+def create_notifc(schema, keys):
+    r = requests.post(f"{http_endpoint}/notification",
+                      data=json.dumps({"appID": app_id, "schemaName": f"{app_name}.{schema.__name__}", "recordKeys": keys}))
+    bug_on(r.status_code != 200)
+    return r.json()["notificationID"]
+
+
+def delete_notifc(notifc_id):
+    r = requests.delete(f"{http_endpoint}/notification",
+                        params={"appID": app_id, "notificationID": notifc_id})
+    bug_on(r.status_code != 200)
+
+
+async def subscribe(notifc_id, callback):
+    async with websockets.connect(f"{ws_endpoint}/notification?appID={app_id}&notificationID={notifc_id}") as websocket:
+        async for msg in websocket:
+            notifc_msg = dto.NotificationMessage()
+            notifc_msg.ParseFromString(bytes(msg, 'utf-8'))
+            for key in notifc_msg.record_keys:
+                callback(key)
