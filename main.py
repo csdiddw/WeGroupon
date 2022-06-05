@@ -21,11 +21,18 @@ async def cancel_task(task):
         return
 
 
+g_status_str = {
+    gp.G_STATUS_OPEN: "Open",
+    gp.G_STATUS_FINISH: "Finished"
+}
+
+
 def print_group(group):
     print(f"------- Group #{group.g_id} -------")
     print(f"Name: {group.g_name}")
     print(f"Description: {group.g_description}")
     print(f"Total participants: {len(group.g_participators)}")
+    print(f"status: {g_status_str[group.g_status]}")
     print("-" * (23 + len(str(group.g_id))))
 
 
@@ -117,6 +124,7 @@ async def create_group():
     group.g_id = g_id
     group.g_name = await ainput("Enter group name: ")
     group.g_description = await ainput("Enter group description: ")
+    group.g_status = gp.G_STATUS_OPEN
 
     customer = wc.tx_get(tx_id, gp.Customer, c_id)
     customer.c_owned_groups.append(g_id)
