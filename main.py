@@ -21,9 +21,24 @@ async def cancel_task(task):
         return
 
 
+def print_group(group):
+    print(f"------- Group #{group.g_id} -------")
+    print(f"Name: {group.g_name}")
+    print(f"Description: {group.g_description}")
+    print(f"Total participants: {len(group.g_participators)}")
+    print("-" * (23 + len(str(group.g_id))))
+
+
+def print_customer(customer):
+    print(f"------- Customer #{customer.c_id} -------")
+    print(f"Name: {customer.c_name}")
+    print(f"Phone: {customer.c_phone}")
+    print("-" * (26 + len(str(customer.c_id))))
+
+
 def on_group_update(g_id):
     g_id = int(g_id)
-    print(f"Group {g_id} is updated")
+    print(f"Group #{g_id} is updated")
 
 
 async def update_current_customter(customer):
@@ -57,7 +72,7 @@ async def register():
     tx_id = wc.tx_begin()
     
     if wc.tx_get(tx_id, gp.Customer, c_id) is not None:
-        print(f"Customer {c_id} already exists")
+        print(f"Customer #{c_id} already exists")
         wc.tx_abort(tx_id)
         return
     
@@ -69,14 +84,17 @@ async def register():
     
     wc.tx_commit(tx_id)
 
+    print_customer(customer)
+
 
 async def login():
     c_id = int(await ainput("Enter customer ID: "))
     customer = wc.get(gp.Customer, c_id)
     if customer is None:
-        print(f"Customer {c_id} not found")
+        print(f"Customer #{c_id} not found")
     else:
         await update_current_customter(customer)
+        print_customer(customer)
 
 
 async def create_group():
@@ -91,7 +109,7 @@ async def create_group():
     
     group = wc.tx_get(tx_id, gp.Group, g_id)
     if group is not None:
-        print(f"Group {g_id} already exists")
+        print(f"Group #{g_id} already exists")
         wc.tx_abort(tx_id)
         return
 
@@ -113,6 +131,8 @@ async def create_group():
 
     await update_current_customter(customer)
 
+    print_group(group)
+
 
 async def join_group():
     if current_customer is None:
@@ -126,7 +146,7 @@ async def join_group():
 
     group = wc.tx_get(tx_id, gp.Group, g_id)
     if group is None:
-        print(f"Group {g_id} not found")
+        print(f"Group #{g_id} not found")
         wc.tx_abort(tx_id)
         return
 
@@ -142,6 +162,8 @@ async def join_group():
     wc.tx_commit(tx_id)
 
     await update_current_customter(customer)
+
+    print_group(group)
 
 
 ops = [
