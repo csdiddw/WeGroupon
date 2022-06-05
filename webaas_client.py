@@ -19,7 +19,8 @@ def register_app(app_name_, app_id_=None):
     global app_id
     global app_name
     if app_id_ is None:
-        r = requests.post(f"{http_endpoint}/app", params={"appName": app_name_})
+        r = requests.post(f"{http_endpoint}/app",
+                          params={"appName": app_name_})
         bug_on(r.status_code != 200)
         app_id_ = r.json()["appID"]
     app_id = app_id_
@@ -38,18 +39,21 @@ def create_schema(schema_file):
 
 
 def tx_begin():
-    r = requests.post(f"{http_endpoint}/transaction", params={"action": "begin"})
+    r = requests.post(f"{http_endpoint}/transaction",
+                      params={"action": "begin"})
     bug_on(r.status_code != 200)
     return r.json()["transactionID"]
 
 
 def tx_abort(tx_id):
-    r = requests.post(f"{http_endpoint}/transaction", params={"action": "abort", "transactionID": tx_id})
+    r = requests.post(f"{http_endpoint}/transaction",
+                      params={"action": "abort", "transactionID": tx_id})
     bug_on(r.status_code != 200)
 
 
 def tx_commit(tx_id):
-    r = requests.post(f"{http_endpoint}/transaction", params={"action": "commit", "transactionID": tx_id})
+    r = requests.post(f"{http_endpoint}/transaction",
+                      params={"action": "commit", "transactionID": tx_id})
     bug_on(r.status_code != 200)
 
 
@@ -63,11 +67,12 @@ def tx_get(tx_id, schema, key):
     else:
         bug_on(r.json()["code"] != 1002)
         return None
-    
+
 
 def tx_put(tx_id, record):
     r = requests.post(f"{http_endpoint}/record/transactional", data=record.SerializeToString(),
                       params={"appID": app_id, "schemaName": f"{app_name}.{type(record).__name__}", "transactionID": tx_id})
+    print(r.status_code)
     bug_on(r.status_code != 200)
 
 
@@ -86,7 +91,7 @@ def get(schema, key):
 def parse_range_query_result(schema, buf):
     more = bool(buf[0])
     buf = buf[1:]
-    
+
     records = []
     while len(buf) > 0:
         size = buf[0] * 256 + buf[1]

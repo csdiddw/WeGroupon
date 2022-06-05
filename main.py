@@ -45,25 +45,25 @@ def print_customer(customer):
 
 def on_group_update(g_id):
     g_id = int(g_id)
-    
+
     group = wc.get(gp.Group, g_id)
 
     if g_id in current_customer.c_owned_groups and \
-        group.g_status == gp.G_STATUS_OPEN:
+            group.g_status == gp.G_STATUS_OPEN:
         print(f"\n[Notification] Group #{g_id} has new participants")
-    
+
     if g_id in current_customer.c_participated_groups and \
-        group.g_status == gp.G_STATUS_FINISH:
+            group.g_status == gp.G_STATUS_FINISH:
         print(f"\n[Notification] Group #{g_id} has been finished")
 
 
-async def update_current_customter(customer):
+async def update_current_customer(customer):
     global current_customer
     global current_notifc_id
     global current_subscribing_task
-    
+
     current_customer = customer
-    
+
     if current_notifc_id is not None:
         await cancel_task(current_subscribing_task)
         wc.delete_notifc(current_notifc_id)
@@ -72,7 +72,7 @@ async def update_current_customter(customer):
     c_participated_groups = list(customer.c_participated_groups)
     subscribed_groups = c_owned_groups + c_participated_groups
     subscribed_groups = [str(g_id) for g_id in subscribed_groups]
-    
+
     if len(subscribed_groups) == 0:
         current_notifc_id = None
         current_subscribing_task = None
@@ -84,20 +84,20 @@ async def update_current_customter(customer):
 
 async def register():
     c_id = int(await ainput("Enter customer ID: "))
-    
+
     tx_id = wc.tx_begin()
-    
+
     if wc.tx_get(tx_id, gp.Customer, c_id) is not None:
         print(f"Customer #{c_id} already exists")
         wc.tx_abort(tx_id)
         return
-    
+
     customer = gp.Customer()
     customer.c_id = c_id
     customer.c_name = await ainput("Enter customer name: ")
     customer.c_phone = await ainput("Enter customer phone: ")
     wc.tx_put(tx_id, customer)
-    
+
     wc.tx_commit(tx_id)
 
     print_customer(customer)
@@ -109,7 +109,7 @@ async def login():
     if customer is None:
         print(f"Customer #{c_id} not found")
     else:
-        await update_current_customter(customer)
+        await update_current_customer(customer)
         print_customer(customer)
 
 
@@ -122,7 +122,7 @@ async def create_group():
     g_id = int(await ainput("Enter group ID: "))
 
     tx_id = wc.tx_begin()
-    
+
     group = wc.tx_get(tx_id, gp.Group, g_id)
     if group is not None:
         print(f"Group #{g_id} already exists")
@@ -143,10 +143,10 @@ async def create_group():
 
     wc.tx_put(tx_id, group)
     wc.tx_put(tx_id, customer)
-    
+
     wc.tx_commit(tx_id)
 
-    await update_current_customter(customer)
+    await update_current_customer(customer)
 
     print_group(group)
 
@@ -155,7 +155,7 @@ async def join_group():
     if current_customer is None:
         print("Please login first")
         return
-    
+
     c_id = current_customer.c_id
     g_id = int(await ainput("Enter group ID: "))
 
@@ -173,12 +173,12 @@ async def join_group():
         return
 
     customer = wc.tx_get(tx_id, gp.Customer, c_id)
-    
+
     if g_id in customer.c_participated_groups or \
        g_id in customer.c_owned_groups:
-       print(f"Already in group #{g_id}")
-       wc.tx_abort(tx_id)
-       return
+        print(f"Already in group #{g_id}")
+        wc.tx_abort(tx_id)
+        return
 
     customer.c_participated_groups.append(g_id)
 
@@ -190,7 +190,7 @@ async def join_group():
 
     wc.tx_commit(tx_id)
 
-    await update_current_customter(customer)
+    await update_current_customer(customer)
 
     print_group(group)
 
@@ -228,9 +228,9 @@ async def finish_group():
         return
 
     group.g_status = gp.G_STATUS_FINISH
-    
+
     wc.tx_put(tx_id, group)
-    
+
     wc.tx_commit(tx_id)
 
     print_group(group)
@@ -253,13 +253,17 @@ async def main():
         wc.create_schema("proto/group_purchase.proto")
     else:
         wc.register_app("group_purchase", sys.argv[1])
-    
+
     print("\nWelcome to the group buy application")
     while True:
         print("\nPlease tell me what you want to do")
         for (op_idx, (_, op_desc)) in enumerate(ops):
             print(f"{op_idx}. {op_desc}")
-        op_idx = int(await ainput("Enter choice: "))
+        try:
+            op_idx = int(await ainput("Enter choice: "))
+        except ValueError:
+            print("Invalid choice")
+            continue
         if op_idx < len(ops):
             await ops[op_idx][0]()
 
