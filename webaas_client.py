@@ -83,6 +83,28 @@ def get(schema, key):
         return None
 
 
+def parse_range_query_result(schema, buf):
+    more = bool(buf[0])
+    buf = buf[1:]
+    
+    records = []
+    while len(buf) > 0:
+        size = buf[0] * 256 + buf[1]
+        record = schema()
+        record.ParseFromString(buf[2:2 + size])
+        buf = buf[2 + size:]
+        records.append(record)
+
+    return records, more
+
+
+def get_range(schema, begin_key, end_key, itr):
+    r = requests.get(http_endpoint+"/query",
+                     params={"appID": app_id, "schemaName": f"{app_name}.{schema.__name__}", "range": True, "beginKey": begin_key, "endKey": end_key, "iteration": itr})
+    bug_on(r.status_code != 200)
+    return parse_range_query_result(schema, r.content)
+
+
 def put(record):
     r = requests.post(f"{http_endpoint}/record", data=record.SerializeToString(),
                       params={"appID": app_id, "schemaName": f"{app_name}.{type(record).__name__}"})

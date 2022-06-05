@@ -173,11 +173,22 @@ async def join_group():
     print_group(group)
 
 
+async def print_all_groups():
+    more = True
+    itr = 1
+    while more:
+        groups, more = wc.get_range(gp.Group, "0", "999", itr)
+        for group in groups:
+            print_group(group)
+        itr += 1
+
+
 ops = [
     (register, "Register"),
     (login, "Login"),
     (create_group, "Create a group"),
     (join_group, "Join a group"),
+    (print_all_groups, "Print all groups"),
     (exit, "Exit")
 ]
 
