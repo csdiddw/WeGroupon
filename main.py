@@ -158,6 +158,11 @@ async def join_group():
         wc.tx_abort(tx_id)
         return
 
+    if group.g_status == gp.G_STATUS_FINISH:
+        print(f"Group #{g_id} has been finished")
+        wc.tx_abort(tx_id)
+        return
+
     customer = wc.tx_get(tx_id, gp.Customer, c_id)
     
     if g_id in customer.c_participated_groups or \
@@ -165,7 +170,7 @@ async def join_group():
        print(f"Already in group #{g_id}")
        wc.tx_abort(tx_id)
        return
-    
+
     customer.c_participated_groups.append(g_id)
 
     g_participator = group.g_participators.add()
@@ -191,12 +196,44 @@ async def print_all_groups():
         itr += 1
 
 
+async def finish_group():
+    if current_customer is None:
+        print("Please login first")
+        return
+
+    c_id = current_customer.c_id
+    g_id = int(await ainput("Enter group ID: "))
+
+    tx_id = wc.tx_begin()
+
+    customer = wc.tx_get(tx_id, gp.Customer, c_id)
+    if g_id not in customer.c_owned_groups:
+        print(f"Not the owner of group #{g_id}")
+        wc.tx_abort(tx_id)
+        return
+
+    group = wc.tx_get(tx_id, gp.Group, g_id)
+    if group.g_status == gp.G_STATUS_FINISH:
+        print(f"Group #{g_id} has already been finished")
+        wc.tx_abort(tx_id)
+        return
+
+    group.g_status = gp.G_STATUS_FINISH
+    
+    wc.tx_put(tx_id, group)
+    
+    wc.tx_commit(tx_id)
+
+    print_group(group)
+
+
 ops = [
     (register, "Register"),
     (login, "Login"),
     (create_group, "Create a group"),
     (join_group, "Join a group"),
     (print_all_groups, "Print all groups"),
+    (finish_group, "Finish a group"),
     (exit, "Exit")
 ]
 
