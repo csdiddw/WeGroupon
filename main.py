@@ -58,7 +58,7 @@ async def register():
     
     if wc.tx_get(tx_id, gp.Customer, c_id) is not None:
         print(f"Customer {c_id} already exists")
-        wc.tx_abort()
+        wc.tx_abort(tx_id)
         return
     
     customer = gp.Customer()
@@ -166,7 +166,8 @@ async def main():
         for (op_idx, (_, op_desc)) in enumerate(ops):
             print(f"{op_idx}. {op_desc}")
         op_idx = int(await ainput("Enter choice: "))
-        await ops[op_idx][0]()
+        if op_idx < len(ops):
+            await ops[op_idx][0]()
 
 
 if __name__ == "__main__":
