@@ -45,7 +45,16 @@ def print_customer(customer):
 
 def on_group_update(g_id):
     g_id = int(g_id)
-    print(f"Group #{g_id} is updated")
+    
+    group = wc.get(gp.Group, g_id)
+
+    if g_id in current_customer.c_owned_groups and \
+        group.g_status == gp.G_STATUS_OPEN:
+        print(f"\n[Notification] Group #{g_id} has new participants")
+    
+    if g_id in current_customer.c_participated_groups and \
+        group.g_status == gp.G_STATUS_FINISH:
+        print(f"\n[Notification] Group #{g_id} has been finished")
 
 
 async def update_current_customter(customer):
