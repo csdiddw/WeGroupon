@@ -52,9 +52,9 @@ async def update_current_customter(customer):
         await cancel_task(current_subscribing_task)
         wc.delete_notifc(current_notifc_id)
 
-    c_owned_groups = set(customer.c_owned_groups)
-    c_participated_groups = set(customer.c_participated_groups)
-    subscribed_groups = c_owned_groups.union(c_participated_groups)
+    c_owned_groups = list(customer.c_owned_groups)
+    c_participated_groups = list(customer.c_participated_groups)
+    subscribed_groups = c_owned_groups + c_participated_groups
     subscribed_groups = [str(g_id) for g_id in subscribed_groups]
     
     if len(subscribed_groups) == 0:
@@ -151,6 +151,13 @@ async def join_group():
         return
 
     customer = wc.tx_get(tx_id, gp.Customer, c_id)
+    
+    if g_id in customer.c_participated_groups or \
+       g_id in customer.c_owned_groups:
+       print(f"Already in group #{g_id}")
+       wc.tx_abort(tx_id)
+       return
+    
     customer.c_participated_groups.append(g_id)
 
     g_participator = group.g_participators.add()
