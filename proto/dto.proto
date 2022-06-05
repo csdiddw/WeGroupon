@@ -1,0 +1,11 @@
+syntax = "proto3";
+package notification;
+
+import 'record_metadata_options.proto';
+
+message NotificationMessage {
+  string notifc_id = 1 [(webaas.db.record.field).primary_key = true];
+  string app_id = 2;
+  string schema_name = 3;
+  repeated string record_keys = 4; 
+}
