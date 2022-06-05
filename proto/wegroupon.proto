@@ -1,12 +1,12 @@
 syntax = "proto3";
-package group_purchase;
+package wegroupon;
 
 import 'record_metadata_options.proto';
 import 'google/protobuf/timestamp.proto';
 
 message G_Participator {
 
-  int32 g_p_id = 1;
+  string g_p_id = 1;
 
   message G_P_Item {
     int32 g_p_id = 1;
@@ -28,7 +28,7 @@ message Group {
   int32 g_id = 1 [ (webaas.db.record.field).primary_key = true ];
   string g_name = 2;
   string g_description = 3;
-  int32 g_owner_id = 4;
+  string g_owner_id = 4;
   google.protobuf.Timestamp g_created_at = 5;
   google.protobuf.Timestamp g_finished_at = 6;
 
@@ -47,9 +47,9 @@ message Group {
 }
 
 message Customer {
-  int32 c_id = 1 [ (webaas.db.record.field).primary_key = true ];
+  string c_phone = 1 [ (webaas.db.record.field).primary_key = true ];
   string c_name = 2;
-  string c_phone = 3;
+  string c_password = 3;
   repeated int32 c_owned_groups = 4;
   repeated int32 c_participated_groups = 5;
 }
@@ -69,4 +69,11 @@ message Audit {
   double a_money = 4;
   int32 a_group_id = 5;
   int32 a_item_id = 6;
+}
+
+message Meta {
+  int32 m_id = 1 [ (webaas.db.record.field).primary_key = true ];
+  int32 m_group_id = 2;
+  int32 m_history_item_id = 3;
+  int32 m_audit_id = 4;
 }

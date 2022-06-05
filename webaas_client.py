@@ -2,13 +2,13 @@ import requests
 import websockets
 import json
 import dto_pb2 as dto
+import wegroupon_pb2 as wg
 
 
 http_endpoint = "http://tea2:8000"
 ws_endpoint = "ws://tea2:8000"
 app_id = None
 app_name = None
-
 
 def bug_on(cond):
     if cond:
