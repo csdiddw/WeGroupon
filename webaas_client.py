@@ -6,8 +6,8 @@ import dto_pb2 as dto
 import wegroupon_pb2 as wg
 
 
-http_endpoint = "http://tea2:8000"
-ws_endpoint = "ws://tea2:8000"
+http_endpoint = "http://202.120.40.82:11232"
+ws_endpoint = "ws://202.120.40.82:11232"
 app_id = None
 app_name = None
 
