@@ -214,8 +214,25 @@ async def join_group():
         g_p_item_list.append(item)
         group.g_items[g_p_id].g_i_count = group.g_items[g_p_id].g_i_count - g_p_count
 
-
     tx_id = wc.tx_begin()
+    
+    # Recheck group
+    group = wc.tx_get(tx_id, wg.Group, g_id)
+    if group is None:
+        print(f"Group #{g_id} not found")
+        wc.tx_abort(tx_id)
+        return
+    elif group.g_status == wg.G_STATUS_FINISH:
+        print(f"Group #{g_id} has been finished")
+        wc.tx_abort(tx_id)
+        return
+    else:
+        for items in g_p_item_list:
+            if(group.g_items[items.g_p_id].g_i_count < items.g_p_count):
+                print(f"Item #{items.g_p_id} is not enough")
+                wc.tx_abort(tx_id)
+                return
+
     customer = wc.tx_get(tx_id, wg.Customer, c_phone)
 
     if g_id in customer.c_participated_groups or \
