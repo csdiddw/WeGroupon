@@ -136,4 +136,4 @@ async def subscribe(notifc_id, callback):
             notifc_msg = dto.NotificationMessage()
             notifc_msg.ParseFromString(bytes(msg, 'utf-8'))
             for key in notifc_msg.record_keys:
-                await callback(key)
+                callback(key)
