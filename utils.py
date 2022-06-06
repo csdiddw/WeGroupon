@@ -9,11 +9,23 @@ g_status_str = {
 }
 
 
+def print_group_item(item):
+    print(f"------- Group Item #{item.g_i_id} -------")
+    print(f"Name of the item: {item.g_i_name}")
+    print(f"Description: {item.g_i_description}")
+    print(f"Number: {item.g_i_count}")
+    print(f"Price: {item.g_i_price}")
+    print("-" * (27 + len(str(item.g_i_id))))
+
+
 def print_group(group):
     print(f"------- Group #{group.g_id} -------")
     print(f"Name: {group.g_name}")
     print(f"Description: {group.g_description}")
     print(f"Total participants: {len(group.g_participators)}")
+    print(f"Total items: {len(group.g_items)}")
+    for item in list(group.g_items):
+        print_group_item(item)
     print(f"owner: {group.g_owner_id}")
     print(f"status: {g_status_str[group.g_status]}")
     print("-" * (23 + len(str(group.g_id))))

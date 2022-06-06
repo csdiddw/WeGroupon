@@ -81,6 +81,7 @@ async def register():
     wc.tx_commit(tx_id)
 
     utils.print_customer(customer)
+    await update_current_customer(customer)
 
 
 async def login():
@@ -111,6 +112,23 @@ async def create_group():
     g_name = await ainput("Enter group name: ")
     g_description = await ainput("Enter group description: ")
 
+    g_item_list = []
+    g_i_id = 0
+
+    while(True):
+
+        g_i_name = await ainput("Enter item name (enter done for finish):")
+        if(g_i_name == "done"):
+            break
+        item = wg.G_Item()
+        item.g_i_id = g_i_id
+        item.g_i_name = g_i_name
+        item.g_i_description = await ainput("Enter item description: ")
+        item.g_i_count = int(await ainput("Enter item count: "))
+        item.g_i_price = float(await ainput("Enter item price: "))
+        g_i_id = g_i_id + 1
+        g_item_list.append(item)
+
     c_phone = current_customer.c_phone
 
     tx_id = wc.tx_begin()
@@ -119,6 +137,7 @@ async def create_group():
 
     g_id = meta.m_group_id
 
+#   check the group
     group = wc.tx_get(tx_id, wg.Group, g_id)
     if group is not None:
         print(f"Group #{g_id} already exists")
@@ -131,6 +150,9 @@ async def create_group():
     group.g_name = g_name
     group.g_description = g_description
     group.g_status = wg.G_STATUS_OPEN
+    group.g_items.extend(g_item_list)
+    print(g_item_list)
+    print(group.g_items)
 
     customer = wc.tx_get(tx_id, wg.Customer, c_phone)
     customer.c_owned_groups.append(g_id)
@@ -159,19 +181,41 @@ async def join_group():
     c_phone = current_customer.c_phone
     g_id = int(await ainput("Enter group ID: "))
 
-    tx_id = wc.tx_begin()
-
-    group = wc.tx_get(tx_id, wg.Group, g_id)
+    group = wc.get(wg.Group, g_id)
     if group is None:
         print(f"Group #{g_id} not found")
-        wc.tx_abort(tx_id)
         return
-
-    if group.g_status == wg.G_STATUS_FINISH:
+    elif group.g_status == wg.G_STATUS_FINISH:
         print(f"Group #{g_id} has been finished")
-        wc.tx_abort(tx_id)
         return
+    else:
+        utils.print_group(group)
 
+    g_p_item_list = []
+
+#  TODO: check valid
+
+    while(True):
+        g_p_id = int(await ainput("Enter item id (enter -1 for finish):"))
+        if(g_p_id == -1):
+            break
+        elif(group.g_items[g_p_id].g_i_count <= 0):
+            print(f"Item #{g_p_id} is not enough")
+            continue
+
+        item = wg.G_P_Item()
+        item.g_p_id = g_p_id
+        g_p_count = int(await ainput("Enter item count: "))
+        if(group.g_items[g_p_id].g_i_count < g_p_count):
+            print(f"Item #{g_p_id} is not enough")
+            continue
+        item.g_p_count = g_p_count
+        item.g_p_price = group.g_items[g_p_id].g_i_price
+        g_p_item_list.append(item)
+        group.g_items[g_p_id].g_i_count = group.g_items[g_p_id].g_i_count - g_p_count
+
+
+    tx_id = wc.tx_begin()
     customer = wc.tx_get(tx_id, wg.Customer, c_phone)
 
     if g_id in customer.c_participated_groups or \
@@ -184,6 +228,7 @@ async def join_group():
 
     g_participator = group.g_participators.add()
     g_participator.g_p_id = customer.c_phone
+    g_participator.g_p_items.extend(g_p_item_list)
 
     wc.tx_put(tx_id, group)
     wc.tx_put(tx_id, customer)

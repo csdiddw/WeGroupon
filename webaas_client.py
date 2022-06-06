@@ -72,7 +72,6 @@ def tx_get(tx_id, schema, key):
 def tx_put(tx_id, record):
     r = requests.post(f"{http_endpoint}/record/transactional", data=record.SerializeToString(),
                       params={"appID": app_id, "schemaName": f"{app_name}.{type(record).__name__}", "transactionID": tx_id})
-    print(r.status_code)
     bug_on(r.status_code != 200)
 
 
