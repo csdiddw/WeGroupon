@@ -60,7 +60,11 @@ async def update_current_customer(customer):
             wc.subscribe(current_notifc_id, on_group_update))
 
 
-async def register_with_param(c_phone,c_name,c_password):
+async def get_customer(c_phone):
+    return wc.get(wg.Customer, c_phone)
+
+
+async def register_with_param(c_phone, c_name, c_password):
 
     while wc.get(wg.Customer, c_phone) is not None:
         print(
@@ -80,13 +84,15 @@ async def register_with_param(c_phone,c_name,c_password):
     await update_current_customer(customer)
     return customer
 
+
 async def register():
     c_phone = await ainput("Enter your phone: ")
     c_name = await ainput("Enter your name: ")
     c_password = await ainput("Enter your password: ")
-    await register_with_param(c_phone,c_name,c_password)
+    await register_with_param(c_phone, c_name, c_password)
 
-async def login_with_param(c_phone,c_password):
+
+async def login_with_param(c_phone, c_password):
     customer = wc.get(wg.Customer, c_phone)
     if customer is None:
         print(f"Customer with #{c_phone} not found")
@@ -97,10 +103,12 @@ async def login_with_param(c_phone,c_password):
         utils.print_customer(customer)
     return customer
 
+
 async def login():
     c_phone = int(await ainput("Enter your phone: "))
     c_password = await ainput("Enter your password: ")
-    await login_with_param(c_phone,c_password)
+    await login_with_param(c_phone, c_password)
+
 
 async def get_user_info():
     if current_customer is None:
@@ -109,32 +117,10 @@ async def get_user_info():
     utils.print_customer(current_customer)
 
 
-async def create_group():
+async def create_group(g_name, g_description, c_phone, g_item_list):
     if current_customer is None:
         print("Please login first")
         return
-
-    g_name = await ainput("Enter group name: ")
-    g_description = await ainput("Enter group description: ")
-
-    g_item_list = []
-    g_i_id = 0
-
-    while(True):
-
-        g_i_name = await ainput("Enter item name (enter done for finish):")
-        if(g_i_name == "done"):
-            break
-        item = wg.G_Item()
-        item.g_i_id = g_i_id
-        item.g_i_name = g_i_name
-        item.g_i_description = await ainput("Enter item description: ")
-        item.g_i_count = int(await ainput("Enter item count: "))
-        item.g_i_price = float(await ainput("Enter item price: "))
-        g_i_id = g_i_id + 1
-        g_item_list.append(item)
-
-    c_phone = current_customer.c_phone
 
     tx_id = wc.tx_begin()
 
@@ -177,7 +163,8 @@ async def create_group():
 
     utils.print_group(group)
 
-async def join_group_with_param(c_phone,g_id):
+
+async def join_group_with_param(c_phone, g_id):
 
     group = wc.get(wg.Group, g_id)
     if group is None:
@@ -191,7 +178,7 @@ async def join_group_with_param(c_phone,g_id):
 
     g_p_item_list = []
 
-#  TODO: check valid
+#  TODO: redo this part
 
     while(True):
         g_p_id = int(await ainput("Enter item id (enter -1 for finish):"))
@@ -211,7 +198,6 @@ async def join_group_with_param(c_phone,g_id):
         item.g_p_price = group.g_items[g_p_id].g_i_price
         g_p_item_list.append(item)
         group.g_items[g_p_id].g_i_count = group.g_items[g_p_id].g_i_count - g_p_count
-
 
     tx_id = wc.tx_begin()
     customer = wc.tx_get(tx_id, wg.Customer, c_phone)
@@ -239,6 +225,7 @@ async def join_group_with_param(c_phone,g_id):
 
     return group
 
+
 async def join_group():
     if current_customer is None:
         print("Please login first")
@@ -246,13 +233,13 @@ async def join_group():
 
     c_phone = current_customer.c_phone
     g_id = int(await ainput("Enter group ID: "))
-    await join_group_with_param(c_phone,g_id)
+    await join_group_with_param(c_phone, g_id)
 
 
 async def get_all_groups():
     more = True
     itr = 1
-    all_groups=[]
+    all_groups = []
     while more:
         groups, more = wc.get_range(wg.Group, "0", "999", itr)
         for group in groups:

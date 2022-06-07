@@ -3,6 +3,7 @@ from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QAction
 from gui.account import RegisterWidget, LoginWidget, UserInfoWidget
 from gui.group_list import GroupListWidget
+from gui.group_manage import CreateGroupWidget
 
 
 class InitialMenu(QWidget):
@@ -46,11 +47,23 @@ class GrouponMain(QMainWindow):
         self.statusBar().showMessage("欢迎使用WeGroupon")
         self.setGeometry(300, 300, 300, 200)
         self.setWindowTitle('WeGroupon')
+
+        showUserInfoAct = QAction('用户信息', self)
+        showUserInfoAct.triggered.connect(self.show_user_info)
         showGroupListAct = QAction('显示团购列表', self)
         showGroupListAct.triggered.connect(self.show_group_list)
+        createGroupAct = QAction('创建团购', self)
+        createGroupAct.triggered.connect(self.create_group)
+
         menuBar = self.menuBar()
+        showUserInfoActMenu = menuBar.addMenu('用户信息')
+        showUserInfoActMenu.addAction(showUserInfoAct)
+
         showGroupListMenu = menuBar.addMenu('团购列表')
         showGroupListMenu.addAction(showGroupListAct)
+
+        createGroupListMenu = menuBar.addMenu('创建团购')
+        createGroupListMenu.addAction(createGroupAct)
 
         self.show_initial_menu()
         self.show()
@@ -75,6 +88,9 @@ class GrouponMain(QMainWindow):
         self.login_widget.register.connect(self.register)
 
     def show_user_info(self):
+        if self.customer is None:
+            self.login()
+            return
         self.user_info_widget = UserInfoWidget(self.customer)
         self.setCentralWidget(self.user_info_widget)
         self.user_info_widget.back.connect(self.show_initial_menu)
@@ -85,3 +101,10 @@ class GrouponMain(QMainWindow):
             return
         self.group_list_widget = GroupListWidget(self.customer)
         self.setCentralWidget(self.group_list_widget)
+
+    def create_group(self):
+        if self.customer is None:
+            self.login()
+            return
+        self.create_group_widget = CreateGroupWidget(self.customer)
+        self.setCentralWidget(self.create_group_widget)

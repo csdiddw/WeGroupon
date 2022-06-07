@@ -15,7 +15,7 @@ def main():
     else:
         wc.register_app("wegroupon", sys.argv[1])
     app = QApplication(sys.argv)
-    GrouponMain()
+    main_window = GrouponMain()
 
     sys.exit(app.exec())
 

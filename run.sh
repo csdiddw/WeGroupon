@@ -6,7 +6,7 @@ protoc -I=./proto/ --python_out=./ ./proto/*.proto
 
 # if the first arg is gui
 echo $1
-if [ $1 == 'gui' ]
+if [ ! -z "$1" ]&&[ $1 == 'gui' ]
 then
    ./gui.py
 else
