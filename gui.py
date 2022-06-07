@@ -6,7 +6,7 @@ from gui.main_window import GrouponMain
 import webaas_client as wc
 import utils
 
-# TODO:使用一套全局变量逻辑
+# TODO:使用一套全局变量逻辑，比如services中维护了当前用户的信息
 
 
 def main():

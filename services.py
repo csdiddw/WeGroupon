@@ -2,9 +2,6 @@
 
 import asyncio
 from threading import Thread
-
-# from aioconsole import ainput
-
 import utils
 import webaas_client as wc
 import wegroupon_pb2 as wg
@@ -110,7 +107,6 @@ async def create_group_with_param(g_name, g_description, c_phone, g_item_list):
 
     g_id = meta.m_group_id
 
-#  TODO: check the group
     group = wc.tx_get(tx_id, wg.Group, g_id)
     if group is not None:
         print(f"Group #{g_id} already exists")
@@ -199,7 +195,7 @@ async def get_all_groups():
         itr += 1
     return all_groups
 
-# TODO: finish 后查看还是open
+# TODO: bug: finish 后查看还是open
 
 
 async def finish_group_with_param(g_id):

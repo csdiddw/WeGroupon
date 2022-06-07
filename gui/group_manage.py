@@ -62,7 +62,7 @@ class CreateGroupWidget(QWidget):
         self.setLayout(self.layout)
 
     def add_item(self):
-        # TODO: add this
+        # TODO: 增加一个可以增加item的按钮
         print("not support yet")
 
     def create_group(self):

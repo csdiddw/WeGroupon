@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 
-from ctypes import util
 import sys
 import asyncio
-from unittest import async_case
 import services
 import utils
 from aioconsole import ainput

@@ -4,7 +4,7 @@ import wegroupon_pb2 as wg
 import services
 import asyncio
 
-#TODO: 团购列表过多导致无法显示
+# TODO: bug:团购列表过多导致无法显示
 
 
 class GroupItemWidget(QWidget):
@@ -90,7 +90,7 @@ class GroupInfoWidget(QWidget):
         vbox.addWidget(self.group_items_label)
         vbox.addWidget(self.group_items_widget)
         vbox.addWidget(self.join_group_button)
-        # TODO:判断是否是团长
+        # TODO:判断是否是团长，如果是团长就显示
         vbox.addWidget(self.finish_group_button)
         self.setLayout(vbox)
 
