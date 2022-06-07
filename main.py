@@ -36,7 +36,45 @@ async def join_group():
 
     c_phone = services.current_customer.c_phone
     g_id = int(await ainput("Enter group ID: "))
-    await services.join_group_with_param(c_phone, g_id)
+
+    if g_id in services.customer.c_participated_groups or \
+       g_id in services.customer.c_owned_groups:
+        print(f"Already in group #{g_id}")
+        return
+
+    group = wc.get(wg.Group, g_id)
+    if group is None:
+        print(f"Group #{g_id} not found")
+        return
+    elif group.g_status == wg.G_STATUS_FINISH:
+        print(f"Group #{g_id} has been finished")
+        return
+    else:
+        utils.print_group(group)
+
+    g_p_item_list = []
+    while(True):
+        g_p_id = int(await ainput("Enter item id (enter -1 for finish):"))
+        if(g_p_id == -1):
+            break
+        elif(g_p_id >= len(group.g_items)):
+            print("Invalid item id")
+            continue
+        elif(group.g_items[g_p_id].g_i_count <= 0):
+            print(f"Item #{g_p_id} is not enough")
+            continue
+
+        item = wg.G_P_Item()
+        item.g_p_id = g_p_id
+        g_p_count = int(await ainput("Enter item count: "))
+        if(group.g_items[g_p_id].g_i_count < g_p_count):
+            print(f"Item #{g_p_id} is not enough")
+            continue
+        item.g_p_count = g_p_count
+        item.g_p_price = group.g_items[g_p_id].g_i_price
+        g_p_item_list.append(item)
+
+    await services.join_group_with_param(c_phone, g_id, g_p_item_list)
 
 
 async def create_group():

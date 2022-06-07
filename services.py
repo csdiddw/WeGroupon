@@ -146,49 +146,28 @@ async def create_group_with_param(g_name, g_description, c_phone, g_item_list):
     utils.print_group(group)
 
 
-async def join_group_with_param(c_phone, g_id):
+async def join_group_with_param(c_phone, g_id, g_p_item_list):
 
-    group = wc.get(wg.Group, g_id)
+    tx_id = wc.tx_begin()
+   # Recheck group
+    group = wc.tx_get(tx_id, wg.Group, g_id)
     if group is None:
         print(f"Group #{g_id} not found")
+        wc.tx_abort(tx_id)
         return
     elif group.g_status == wg.G_STATUS_FINISH:
         print(f"Group #{g_id} has been finished")
-        return
-    else:
-        utils.print_group(group)
-
-    g_p_item_list = []
-
-#  TODO: redo this part
-
-    # while(True):
-    #     g_p_id = int(await ainput("Enter item id (enter -1 for finish):"))
-    #     if(g_p_id == -1):
-    #         break
-    #     elif(group.g_items[g_p_id].g_i_count <= 0):
-    #         print(f"Item #{g_p_id} is not enough")
-    #         continue
-
-    #     item = wg.G_P_Item()
-    #     item.g_p_id = g_p_id
-    #     g_p_count = int(await ainput("Enter item count: "))
-    #     if(group.g_items[g_p_id].g_i_count < g_p_count):
-    #         print(f"Item #{g_p_id} is not enough")
-    #         continue
-    #     item.g_p_count = g_p_count
-    #     item.g_p_price = group.g_items[g_p_id].g_i_price
-    #     g_p_item_list.append(item)
-    #     group.g_items[g_p_id].g_i_count = group.g_items[g_p_id].g_i_count - g_p_count
-
-    tx_id = wc.tx_begin()
-    customer = wc.tx_get(tx_id, wg.Customer, c_phone)
-
-    if g_id in customer.c_participated_groups or \
-       g_id in customer.c_owned_groups:
-        print(f"Already in group #{g_id}")
         wc.tx_abort(tx_id)
         return
+    else:
+        for items in g_p_item_list:
+            if(group.g_items[items.g_p_id].g_i_count < items.g_p_count):
+                print(f"Item #{items.g_p_id} is not enough")
+                wc.tx_abort(tx_id)
+                return
+            group.g_items[items.g_p_id].g_i_count = group.g_items[items.g_p_id].g_i_count - items.g_p_count
+
+    customer = wc.tx_get(tx_id, wg.Customer, c_phone)
 
     customer.c_participated_groups.append(g_id)
 
