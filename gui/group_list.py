@@ -121,6 +121,7 @@ class GroupListWidget(QWidget):
         self.setLayout(self.groups_widget.layout())
 
     def join_group(self, group: wg.Group):
+        # TODO:正确的逻辑是跳转到加入的界面，然后选择商品并加入
         print("join group")
         asyncio.run(services.join_group_with_param(
             self.customer.c_phone, group.g_id))

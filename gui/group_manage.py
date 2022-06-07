@@ -87,3 +87,5 @@ class CreateGroupWidget(QWidget):
         self.successed.emit(self.customer)
         # TODO： return to the group list page
         QMessageBox.information(self, '提示', '创建成功')
+
+# 增加一个join group的逻辑，可以选择一个团购中的商品，然后加入团购
