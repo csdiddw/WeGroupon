@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QMainWindow, QPushButton, QGridLayout, QWidget
 from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtGui import QIcon, QAction
+from PyQt6.QtGui import QAction
 from gui.account import RegisterWidget, LoginWidget, UserInfoWidget
 from gui.group_list import GroupListWidget
 

@@ -11,6 +11,7 @@ ws_endpoint = "ws://202.120.40.82:11232"
 app_id = None
 app_name = None
 
+
 def bug_on(cond):
     if cond:
         raise RuntimeError()
@@ -132,7 +133,7 @@ def delete_notifc(notifc_id):
 async def subscribe(notifc_id, callback):
     async with websockets.connect(f"{ws_endpoint}/notification?appID={app_id}&notificationID={notifc_id}") as websocket:
         async for msg in websocket:
-            await asyncio.sleep(1) # Wait for the transactions to be committed
+            await asyncio.sleep(1)  # Wait for the transactions to be committed
             notifc_msg = dto.NotificationMessage()
             notifc_msg.ParseFromString(bytes(msg, 'utf-8'))
             for key in notifc_msg.record_keys:

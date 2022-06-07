@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QWidget, QPushButton, QLabel, QLineEdit,QVBoxLayout,QHBoxLayout, QMessageBox
+from PyQt6.QtWidgets import QWidget, QPushButton, QLabel, QVBoxLayout,QHBoxLayout
 from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtGui import QFont
 import wegroupon_pb2 as wg

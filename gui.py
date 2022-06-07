@@ -1,18 +1,21 @@
 #!/usr/bin/env python3
 
 import sys
-from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QLabel, QLineEdit, QGridLayout, QMessageBox
+from PyQt6.QtWidgets import QApplication
 from gui.main_window import GrouponMain
 import webaas_client as wc
 import utils
 
 
 def main():
-    wc.register_app("wegroupon")
-    wc.create_schema("proto/wegroupon.proto")
-    utils.initialize_meta()
+    if len(sys.argv) == 1:
+        wc.register_app("wegroupon")
+        wc.create_schema("proto/wegroupon.proto")
+        utils.initialize_meta()
+    else:
+        wc.register_app("wegroupon", sys.argv[1])
     app = QApplication(sys.argv)
-    main_window = GrouponMain()
+    GrouponMain()
 
     sys.exit(app.exec())
 
