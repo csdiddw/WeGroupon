@@ -1,5 +1,5 @@
 import asyncio
-from PyQt6.QtWidgets import QWidget, QPushButton, QLabel, QVBoxLayout, QHBoxLayout, QLineEdit, QMessageBox
+from PyQt6.QtWidgets import QWidget, QPushButton, QLabel, QVBoxLayout, QLineEdit, QMessageBox
 from PyQt6.QtCore import pyqtSignal
 import wegroupon_pb2 as wg
 import services
@@ -81,7 +81,7 @@ class CreateGroupWidget(QWidget):
         item.g_i_count = int(self.item_count_edit.text())
         item.g_i_price = int(self.item_price_edit.text())
         g_item_list.append(item)
-        asyncio.run(services.create_group(
+        asyncio.run(services.create_group_with_param(
             g_name, g_description, c_phone, g_item_list))
         self.customer = asyncio.run(services.get_customer(c_phone))
         self.successed.emit(self.customer)

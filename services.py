@@ -3,7 +3,7 @@
 import asyncio
 from threading import Thread
 
-from aioconsole import ainput
+# from aioconsole import ainput
 
 import utils
 import webaas_client as wc
@@ -72,11 +72,6 @@ async def get_customer(c_phone):
 
 async def register_with_param(c_phone, c_name, c_password):
 
-    while wc.get(wg.Customer, c_phone) is not None:
-        print(
-            f"Customer with #{c_phone} already exists, please try another one")
-        c_phone = await ainput("Enter your phone: ")
-
     customer = wg.Customer()
     customer.c_phone = c_phone
     customer.c_name = c_name
@@ -91,13 +86,6 @@ async def register_with_param(c_phone, c_name, c_password):
     return customer
 
 
-async def register():
-    c_phone = await ainput("Enter your phone: ")
-    c_name = await ainput("Enter your name: ")
-    c_password = await ainput("Enter your password: ")
-    await register_with_param(c_phone, c_name, c_password)
-
-
 async def login_with_param(c_phone, c_password):
     customer = wc.get(wg.Customer, c_phone)
     if customer is None:
@@ -110,23 +98,11 @@ async def login_with_param(c_phone, c_password):
     return customer
 
 
-async def login():
-    c_phone = int(await ainput("Enter your phone: "))
-    c_password = await ainput("Enter your password: ")
-    await login_with_param(c_phone, c_password)
-
-
 async def get_user_info():
-    if current_customer is None:
-        print("Please login first")
-        return
-    utils.print_customer(current_customer)
+    return wc.get(wg.Customer, current_customer.c_phone)
 
 
-async def create_group(g_name, g_description, c_phone, g_item_list):
-    if current_customer is None:
-        print("Please login first")
-        return
+async def create_group_with_param(g_name, g_description, c_phone, g_item_list):
 
     tx_id = wc.tx_begin()
 
@@ -232,16 +208,6 @@ async def join_group_with_param(c_phone, g_id):
     return group
 
 
-async def join_group():
-    if current_customer is None:
-        print("Please login first")
-        return
-
-    c_phone = current_customer.c_phone
-    g_id = int(await ainput("Enter group ID: "))
-    await join_group_with_param(c_phone, g_id)
-
-
 async def get_all_groups():
     more = True
     itr = 1
@@ -254,6 +220,8 @@ async def get_all_groups():
         itr += 1
     return all_groups
 
+# TODO: finish 后查看还是open
+
 
 async def finish_group_with_param(g_id):
     if current_customer is None:
@@ -261,37 +229,6 @@ async def finish_group_with_param(g_id):
         return
 
     c_phone = current_customer.c_phone
-
-    tx_id = wc.tx_begin()
-
-    customer = wc.tx_get(tx_id, wg.Customer, c_phone)
-    if g_id not in customer.c_owned_groups:
-        print(f"Not the owner of group #{g_id}")
-        wc.tx_abort(tx_id)
-        return
-
-    group = wc.tx_get(tx_id, wg.Group, g_id)
-    if group.g_status == wg.G_STATUS_FINISH:
-        print(f"Group #{g_id} has already been finished")
-        wc.tx_abort(tx_id)
-        return
-
-    group.g_status = wg.G_STATUS_FINISH
-
-    wc.tx_put(tx_id, group)
-
-    wc.tx_commit(tx_id)
-
-    utils.print_group(group)
-
-
-async def finish_group():
-    if current_customer is None:
-        print("Please login first")
-        return
-
-    c_phone = current_customer.c_phone
-    g_id = int(await ainput("Enter group ID: "))
 
     tx_id = wc.tx_begin()
 
