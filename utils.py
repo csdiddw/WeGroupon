@@ -37,6 +37,7 @@ def print_customer(customer):
     print(f"Name: {customer.c_name}")
     print(f"Password: {customer.c_password}")
     print(f"Your Groups: {list(customer.c_owned_groups)}")
+    print(f"Your Participated Groups: {list(customer.c_participated_groups)}")
     print("-" * (26 + len(str(customer.c_phone))))
 
 

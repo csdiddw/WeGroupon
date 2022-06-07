@@ -35,8 +35,8 @@ async def join_group():
     c_phone = services.current_customer.c_phone
     g_id = int(await ainput("Enter group ID: "))
 
-    if g_id in services.customer.c_participated_groups or \
-       g_id in services.customer.c_owned_groups:
+    if g_id in services.current_customer.c_participated_groups or \
+       g_id in services.current_customer.c_owned_groups:
         print(f"Already in group #{g_id}")
         return
 
