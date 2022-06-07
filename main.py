@@ -7,7 +7,6 @@ import utils
 from aioconsole import ainput
 import webaas_client as wc
 
-
 ops = [
     (services.register, "Register"),
     (services.login, "Login"),

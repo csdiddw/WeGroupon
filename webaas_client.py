@@ -3,7 +3,6 @@ import requests
 import websockets
 import json
 import dto_pb2 as dto
-import wegroupon_pb2 as wg
 
 
 # http_endpoint = "http://202.120.40.82:11232"
