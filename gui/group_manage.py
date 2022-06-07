@@ -85,4 +85,5 @@ class CreateGroupWidget(QWidget):
             g_name, g_description, c_phone, g_item_list))
         self.customer = asyncio.run(services.get_customer(c_phone))
         self.successed.emit(self.customer)
+        # TODO： return to the group list page
         QMessageBox.information(self, '提示', '创建成功')

@@ -1,6 +1,5 @@
-from PyQt6.QtWidgets import QWidget, QPushButton, QLabel, QVBoxLayout, QHBoxLayout
+from PyQt6.QtWidgets import QWidget, QPushButton, QLabel, QVBoxLayout, QHBoxLayout, QLineEdit, QMessageBox
 from PyQt6.QtCore import pyqtSignal, Qt
-from PyQt6.QtGui import QFont
 import wegroupon_pb2 as wg
 import services
 import asyncio
@@ -41,6 +40,7 @@ class GroupItemWidget(QWidget):
 class GroupInfoWidget(QWidget):
     # TODO：整理一下layout
     join_group_signal = pyqtSignal(wg.Group)
+    finish_group_signal = pyqtSignal(wg.Group)
 
     def __init__(self, group: wg.Group):
         super().__init__()
@@ -49,12 +49,12 @@ class GroupInfoWidget(QWidget):
     def init_ui(self, group: wg.Group):
         self.group = group
         self.group_id_name_label = QLabel(f"团购号: {group.g_id}")
-        self.group_name_label = QLabel(group.g_name)
+        self.group_name_label = QLabel(f"团购名:{group.g_name}")
         group_name_font = self.group_name_label.font()
         group_name_font.setBold(True)
         self.group_name_label.setFont(group_name_font)
         self.group_name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.group_description_label = QLabel(f"团购名:{group.g_description}")
+        self.group_description_label = QLabel(f"团购描述:{group.g_description}")
         self.group_description_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.group_owner_label = QLabel(f"团长: {group.g_owner_id}")
         self.group_owner_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -69,6 +69,11 @@ class GroupInfoWidget(QWidget):
         self.group_items_widget.setLayout(QVBoxLayout())
         self.join_group_button = QPushButton("加入团购")
         self.join_group_button.clicked.connect(self.join_group)
+        self.finish_group_button = QPushButton("完成团购")
+        self.finish_group_button.clicked.connect(self.finish_group)
+
+        # 初始化商品列表
+
         for group_item in group.g_items:
             self.group_items_widget.layout().addWidget(GroupItemWidget(group_item))
         hbox = QHBoxLayout()
@@ -83,10 +88,15 @@ class GroupInfoWidget(QWidget):
         vbox.addWidget(self.group_items_label)
         vbox.addWidget(self.group_items_widget)
         vbox.addWidget(self.join_group_button)
+        # TODO:判断是否是团长
+        vbox.addWidget(self.finish_group_button)
         self.setLayout(vbox)
 
     def join_group(self):
         self.join_group_signal.emit(self.group)
+
+    def finish_group(self):
+        self.finish_group_signal.emit(self.group)
 
 
 class GroupListWidget(QWidget):
@@ -104,10 +114,19 @@ class GroupListWidget(QWidget):
         for group in self.all_groups:
             group_info_widget = GroupInfoWidget(group)
             group_info_widget.join_group_signal.connect(self.join_group)
+            group_info_widget.finish_group_signal.connect(self.finish_group)
             self.groups_widget.layout().addWidget(group_info_widget)
         self.setLayout(self.groups_widget.layout())
 
     def join_group(self, group: wg.Group):
+        print("join group")
         asyncio.run(services.join_group_with_param(
             self.customer.c_phone, group.g_id))
-        self.successed.emit(group.g_owner)
+        QMessageBox.information(self, '提示', '加入成功')
+        self.successed.emit(self.customer)
+
+    def finish_group(self, group: wg.Group):
+        print("finish group")
+        asyncio.run(services.finish_group_with_param(group.g_id))
+        QMessageBox.information(self, '提示', '团购已完成')
+        self.successed.emit(self.customer)

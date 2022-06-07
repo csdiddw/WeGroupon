@@ -6,6 +6,8 @@ from gui.main_window import GrouponMain
 import webaas_client as wc
 import utils
 
+# TODO:使用一套全局变量逻辑
+
 
 def main():
     if len(sys.argv) == 1:

@@ -8,7 +8,7 @@ protoc -I=./proto/ --python_out=./ ./proto/*.proto
 echo $1
 if [ ! -z "$1" ]&&[ $1 == 'gui' ]
 then
-   ./gui.py
+   ./gui.py $2
 else
-   ./main.py
+   ./main.py $2
 fi

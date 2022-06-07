@@ -1,6 +1,7 @@
 
 
 import asyncio
+from threading import Thread
 
 from aioconsole import ainput
 
@@ -22,6 +23,7 @@ async def cancel_task(task):
 
 
 def on_group_update(g_id):
+    #TODO: 改成gui版本的通知
     g_id = int(g_id)
 
     group = wc.get(wg.Group, g_id)
@@ -35,6 +37,10 @@ def on_group_update(g_id):
         print(f"\n[Notification] Group #{g_id} has been finished")
 
 
+def subscribe_thread(notifc_id):
+    asyncio.run(wc.subscribe(notifc_id, on_group_update))
+
+
 async def update_current_customer(customer):
     global current_customer
     global current_notifc_id
@@ -43,7 +49,7 @@ async def update_current_customer(customer):
     current_customer = customer
 
     if current_notifc_id is not None:
-        await cancel_task(current_subscribing_task)
+        # await cancel_task(current_subscribing_task)
         wc.delete_notifc(current_notifc_id)
 
     c_owned_groups = list(customer.c_owned_groups)
@@ -56,8 +62,8 @@ async def update_current_customer(customer):
         current_subscribing_task = None
     else:
         current_notifc_id = wc.create_notifc(wg.Group, subscribed_groups)
-        current_subscribing_task = asyncio.create_task(
-            wc.subscribe(current_notifc_id, on_group_update))
+        current_subscribing_task = Thread(
+            target=subscribe_thread, args=(current_notifc_id,)).start()
 
 
 async def get_customer(c_phone):
@@ -128,7 +134,7 @@ async def create_group(g_name, g_description, c_phone, g_item_list):
 
     g_id = meta.m_group_id
 
-#   check the group
+#  TODO: check the group
     group = wc.tx_get(tx_id, wg.Group, g_id)
     if group is not None:
         print(f"Group #{g_id} already exists")
@@ -180,24 +186,24 @@ async def join_group_with_param(c_phone, g_id):
 
 #  TODO: redo this part
 
-    while(True):
-        g_p_id = int(await ainput("Enter item id (enter -1 for finish):"))
-        if(g_p_id == -1):
-            break
-        elif(group.g_items[g_p_id].g_i_count <= 0):
-            print(f"Item #{g_p_id} is not enough")
-            continue
+    # while(True):
+    #     g_p_id = int(await ainput("Enter item id (enter -1 for finish):"))
+    #     if(g_p_id == -1):
+    #         break
+    #     elif(group.g_items[g_p_id].g_i_count <= 0):
+    #         print(f"Item #{g_p_id} is not enough")
+    #         continue
 
-        item = wg.G_P_Item()
-        item.g_p_id = g_p_id
-        g_p_count = int(await ainput("Enter item count: "))
-        if(group.g_items[g_p_id].g_i_count < g_p_count):
-            print(f"Item #{g_p_id} is not enough")
-            continue
-        item.g_p_count = g_p_count
-        item.g_p_price = group.g_items[g_p_id].g_i_price
-        g_p_item_list.append(item)
-        group.g_items[g_p_id].g_i_count = group.g_items[g_p_id].g_i_count - g_p_count
+    #     item = wg.G_P_Item()
+    #     item.g_p_id = g_p_id
+    #     g_p_count = int(await ainput("Enter item count: "))
+    #     if(group.g_items[g_p_id].g_i_count < g_p_count):
+    #         print(f"Item #{g_p_id} is not enough")
+    #         continue
+    #     item.g_p_count = g_p_count
+    #     item.g_p_price = group.g_items[g_p_id].g_i_price
+    #     g_p_item_list.append(item)
+    #     group.g_items[g_p_id].g_i_count = group.g_items[g_p_id].g_i_count - g_p_count
 
     tx_id = wc.tx_begin()
     customer = wc.tx_get(tx_id, wg.Customer, c_phone)
@@ -247,6 +253,36 @@ async def get_all_groups():
             all_groups.append(group)
         itr += 1
     return all_groups
+
+
+async def finish_group_with_param(g_id):
+    if current_customer is None:
+        print("Please login first")
+        return
+
+    c_phone = current_customer.c_phone
+
+    tx_id = wc.tx_begin()
+
+    customer = wc.tx_get(tx_id, wg.Customer, c_phone)
+    if g_id not in customer.c_owned_groups:
+        print(f"Not the owner of group #{g_id}")
+        wc.tx_abort(tx_id)
+        return
+
+    group = wc.tx_get(tx_id, wg.Group, g_id)
+    if group.g_status == wg.G_STATUS_FINISH:
+        print(f"Group #{g_id} has already been finished")
+        wc.tx_abort(tx_id)
+        return
+
+    group.g_status = wg.G_STATUS_FINISH
+
+    wc.tx_put(tx_id, group)
+
+    wc.tx_commit(tx_id)
+
+    utils.print_group(group)
 
 
 async def finish_group():
