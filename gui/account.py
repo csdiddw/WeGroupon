@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QWidget, QPushButton, QLabel, QLineEdit, QVBoxLayout, QMessageBox
+from PyQt6.QtWidgets import QWidget, QPushButton, QLabel, QLineEdit, QGridLayout, QMessageBox,QVBoxLayout
 from PyQt6.QtCore import pyqtSignal
 import wegroupon_pb2 as wg
 import services
@@ -25,14 +25,15 @@ class RegisterWidget(QWidget):
         self.register_button = QPushButton('注册')
         self.register_button.clicked.connect(self.register)
         # 注册布局
-        self.layout = QVBoxLayout()
-        self.layout.addWidget(self.phone_label)
-        self.layout.addWidget(self.phone_edit)
-        self.layout.addWidget(self.username_label)
-        self.layout.addWidget(self.username_edit)
-        self.layout.addWidget(self.password_label)
-        self.layout.addWidget(self.password_edit)
-        self.layout.addWidget(self.register_button)
+        self.layout = QGridLayout()
+        self.layout.addWidget(self.phone_label, 0, 0, 1, 1)
+        self.layout.addWidget(self.phone_edit, 0, 1, 1, 2)
+        self.layout.addWidget(self.username_label, 1, 0, 1, 1)
+        self.layout.addWidget(self.username_edit, 1, 1, 1, 2)
+        self.layout.addWidget(self.password_label, 2, 0, 1, 1)
+        self.layout.addWidget(self.password_edit, 2, 1, 1, 2)
+        self.layout.addWidget(self.register_button, 3, 1, 1, 1)
+        self.layout.setContentsMargins(80, 10, 80, 10)
         self.setLayout(self.layout)
 
     def register(self):
@@ -73,13 +74,14 @@ class LoginWidget(QWidget):
         self.register_button = QPushButton('注册')
         self.register_button.clicked.connect(self.register.emit)
         # 登录布局
-        self.layout = QVBoxLayout()
-        self.layout.addWidget(self.phone_label)
-        self.layout.addWidget(self.phone_edit)
-        self.layout.addWidget(self.password_label)
-        self.layout.addWidget(self.password_edit)
-        self.layout.addWidget(self.login_button)
-        self.layout.addWidget(self.register_button)
+        self.layout = QGridLayout()
+        self.layout.addWidget(self.phone_label, 0, 0, 1, 1)
+        self.layout.addWidget(self.phone_edit, 0, 1, 1, 2)
+        self.layout.addWidget(self.password_label, 1, 0, 1, 1)
+        self.layout.addWidget(self.password_edit, 1, 1, 1, 2)
+        self.layout.addWidget(self.login_button, 2, 1, 1, 1)
+        self.layout.addWidget(self.register_button, 3, 1, 1, 1)
+        self.layout.setContentsMargins(80, 10, 80, 10)
         self.setLayout(self.layout)
 
     def login(self):
