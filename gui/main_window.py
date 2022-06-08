@@ -1,6 +1,6 @@
-from PyQt6.QtWidgets import QMainWindow, QPushButton, QGridLayout, QWidget, QMessageBox
-from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtGui import QAction
+from PyQt6.QtWidgets import QMainWindow, QPushButton, QGridLayout, QWidget, QLabel,QMessageBox
+from PyQt6.QtCore import pyqtSignal,Qt
+from PyQt6.QtGui import QAction, QIcon
 from gui.account import RegisterWidget, LoginWidget, UserInfoWidget
 from gui.group_list import GroupListWidget
 from gui.group_manage import CreateGroupWidget
@@ -18,13 +18,23 @@ class InitialMenu(QWidget):
         self.init_ui()
 
     def init_ui(self):
+        self.logo_icon = QIcon('./resources/common/icon.png')
+        self.logo_label = QLabel()
+        self.logo_label.setPixmap(self.logo_icon.pixmap(200, 200))
+        self.logo_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.name_label = QLabel('WeGroupon')
+        self.name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.name_label.setStyleSheet('font-size: 40px; font-weight: bold;')
+
         self.register_button = QPushButton('注册')
         self.register_button.clicked.connect(self.register)
         self.login_button = QPushButton('登录')
         self.login_button.clicked.connect(self.login)
         self.layout = QGridLayout()
-        self.layout.addWidget(self.register_button, 0, 0)
-        self.layout.addWidget(self.login_button, 0, 1)
+        self.layout.addWidget(self.logo_label, 0, 0, 3, 3)
+        self.layout.addWidget(self.name_label, 2, 0, 1, 3)
+        self.layout.addWidget(self.register_button, 3, 1, 1, 1)
+        self.layout.addWidget(self.login_button, 4, 1, 1, 1)
         self.setLayout(self.layout)
 
     def register(self):
@@ -54,8 +64,9 @@ class GrouponMain(QMainWindow):
 
     def init_ui(self):
         self.statusBar().showMessage("欢迎使用WeGroupon")
-        self.setGeometry(300, 300, 300, 200)
+        self.setGeometry(300, 300, 600, 600)
         self.setWindowTitle('WeGroupon')
+        self.setWindowIcon(QIcon('./resources/common/icon.png'))
 
         services.notification_call_back = self.on_notification
 
@@ -65,8 +76,13 @@ class GrouponMain(QMainWindow):
         showGroupListAct.triggered.connect(self.show_group_list)
         createGroupAct = QAction('创建团购', self)
         createGroupAct.triggered.connect(self.create_group)
+        showInitialMenuAct = QAction('回到首页', self)
+        showInitialMenuAct.triggered.connect(self.show_initial_menu)
 
         menuBar = self.menuBar()
+        
+        showInitialMenuMenu = menuBar.addMenu('页面')
+        showInitialMenuMenu.addAction(showInitialMenuAct)
         showUserInfoActMenu = menuBar.addMenu('用户信息')
         showUserInfoActMenu.addAction(showUserInfoAct)
 
@@ -120,6 +136,7 @@ class GrouponMain(QMainWindow):
             self.login()
             return
         self.create_group_widget = CreateGroupWidget(self.customer)
+        self.create_group_widget.successed.connect(self.show_group_list)
         self.setCentralWidget(self.create_group_widget)
 
     def notification(self, g_id):
@@ -132,4 +149,4 @@ class GrouponMain(QMainWindow):
             QMessageBox.information(self, '提示', '您创建的团购有新的成员加入')
         if g_id in services.current_customer.c_participated_groups and \
                 group.g_status == wg.G_STATUS_FINISH:
-            QMessageBox.information(self, '提示', '您参与的团购已经结束')
+            QMessageBox.information(self, '提示', '您参与的团购已完成，请取货')
