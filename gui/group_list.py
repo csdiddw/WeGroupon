@@ -40,7 +40,7 @@ class GroupItemWidget(QWidget):
 
 
 class GroupInfoWidget(QWidget):
-    # TODO：整理一下layout
+    # TODO:整理一下layout
     join_group_signal = pyqtSignal(wg.Group)
     finish_group_signal = pyqtSignal(wg.Group)
 
@@ -124,7 +124,7 @@ class GroupListWidget(QWidget):
         # TODO:正确的逻辑是跳转到加入的界面，然后选择商品并加入
         print("join group")
         asyncio.run(services.join_group_with_param(
-            self.customer.c_phone, group.g_id))
+            self.customer.c_phone, group.g_id, []))
         QMessageBox.information(self, '提示', '加入成功')
         self.successed.emit(self.customer)
 

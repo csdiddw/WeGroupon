@@ -18,7 +18,6 @@ then
       else
          ./gui.py
       fi
-   ./gui.py $2
 elif [ $1 == 'cli' ]
 then
       if [ $# == 2 ]
