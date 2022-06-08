@@ -1,9 +1,12 @@
-from PyQt6.QtWidgets import QMainWindow, QPushButton, QGridLayout, QWidget, QLabel
+from PyQt6.QtWidgets import QMainWindow, QPushButton, QGridLayout, QWidget, QLabel,QMessageBox
 from PyQt6.QtCore import pyqtSignal,Qt
 from PyQt6.QtGui import QAction, QIcon
 from gui.account import RegisterWidget, LoginWidget, UserInfoWidget
 from gui.group_list import GroupListWidget
 from gui.group_manage import CreateGroupWidget
+import services
+import webaas_client as wc
+import wegroupon_pb2 as wg
 
 
 class InitialMenu(QWidget):
@@ -42,10 +45,16 @@ class InitialMenu(QWidget):
 
 
 class GrouponMain(QMainWindow):
+
+    notification_signal = pyqtSignal(int)
+
     def __init__(self):
         super().__init__()
         self.customer = None
         self.init_ui()
+
+    def on_notification(self, g_id):
+        self.notification_signal.emit(g_id)
 
     def show_initial_menu(self):
         self.initial_menu = InitialMenu()
@@ -58,6 +67,8 @@ class GrouponMain(QMainWindow):
         self.setGeometry(300, 300, 600, 600)
         self.setWindowTitle('WeGroupon')
         self.setWindowIcon(QIcon('./resources/common/icon.png'))
+
+        services.notification_call_back = self.on_notification
 
         showUserInfoAct = QAction('用户信息', self)
         showUserInfoAct.triggered.connect(self.show_user_info)
@@ -81,6 +92,7 @@ class GrouponMain(QMainWindow):
         createGroupListMenu = menuBar.addMenu('创建团购')
         createGroupListMenu.addAction(createGroupAct)
 
+        self.notification_signal.connect(self.notification)
 
         self.show_initial_menu()
         self.show()
@@ -126,3 +138,15 @@ class GrouponMain(QMainWindow):
         self.create_group_widget = CreateGroupWidget(self.customer)
         self.create_group_widget.successed.connect(self.show_group_list)
         self.setCentralWidget(self.create_group_widget)
+
+    def notification(self, g_id):
+        g_id = int(g_id)
+
+        group = wc.get(wg.Group, g_id)
+
+        if g_id in services.current_customer.c_owned_groups and \
+                group.g_status == wg.G_STATUS_OPEN:
+            QMessageBox.information(self, '提示', '您创建的团购有新的成员加入')
+        if g_id in services.current_customer.c_participated_groups and \
+                group.g_status == wg.G_STATUS_FINISH:
+            QMessageBox.information(self, '提示', '您参与的团购已经结束')

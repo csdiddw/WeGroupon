@@ -72,7 +72,6 @@ class GroupItemWidget(QWidget):
 
 
 class GroupInfoWidget(QWidget):
-    # TODO：整理一下layout
     join_group_signal = pyqtSignal(wg.Group,list)
     finish_group_signal = pyqtSignal(wg.Group)
     buy_items = []

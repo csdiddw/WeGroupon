@@ -115,6 +115,12 @@ async def get_user_info():
     utils.print_customer(customer)
 
 
+async def get_group_info():
+    g_id = await ainput("Enter group id: ")
+    group = await services.get_group_info(g_id)
+    utils.print_group(group)
+
+
 async def get_all_groups():
     await services.get_all_groups()
 
@@ -125,6 +131,7 @@ ops = [
     (create_group, "Create a group"),
     (join_group, "Join a group"),
     (get_all_groups, "Print all groups"),
+    (get_group_info, "Get group info"),
     (finish_group, "Finish a group"),
 
     (exit, "Exit")

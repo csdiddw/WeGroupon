@@ -15,17 +15,33 @@ def print_group_item(item):
     print(f"Description: {item.g_i_description}")
     print(f"Number: {item.g_i_count}")
     print(f"Price: {item.g_i_price}")
-    print("-" * (27 + len(str(item.g_i_id))))
+
+
+def print_group_participator_item(item):
+    print(f"------- Group Participator Item #{item.g_p_id} -------")
+    print(f"Phone: {item.g_p_id}")
+    print(f"Count: {item.g_p_count}")
+    print(f"Price: {item.g_p_price}")
+
+
+def print_group_participator(participator):
+    print(f"------- Group Participator #{participator.g_p_id} -------")
+    print(f"Phone: {participator.g_p_id}")
+    for item in participator.g_p_items:
+        print_group_participator_item(item)
 
 
 def print_group(group):
     print(f"------- Group #{group.g_id} -------")
     print(f"Name: {group.g_name}")
     print(f"Description: {group.g_description}")
-    print(f"Total participants: {len(group.g_participators)}")
+    for participant in group.g_participators:
+        print_group_participator(participant)
+    print("-" * 27)
     print(f"Total items: {len(group.g_items)}")
-    for item in list(group.g_items):
+    for item in group.g_items:
         print_group_item(item)
+    print("-" * 27)
     print(f"owner: {group.g_owner_id}")
     print(f"status: {g_status_str[group.g_status]}")
     print("-" * (23 + len(str(group.g_id))))

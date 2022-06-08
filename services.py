@@ -9,6 +9,7 @@ import wegroupon_pb2 as wg
 current_customer = None
 current_notifc_id = None
 current_subscribing_task = None
+notification_call_back = None
 
 
 async def cancel_task(task):
@@ -20,7 +21,6 @@ async def cancel_task(task):
 
 
 def on_group_update(g_id):
-    #TODO: 改成gui版本的通知
     g_id = int(g_id)
 
     group = wc.get(wg.Group, g_id)
@@ -33,12 +33,17 @@ def on_group_update(g_id):
             group.g_status == wg.G_STATUS_FINISH:
         print(f"\n[Notification] Group #{g_id} has been finished")
 
-
-def subscribe_thread(notifc_id):
-    asyncio.run(wc.subscribe(notifc_id, on_group_update))
+    notification_call_back(g_id)
 
 
-async def update_current_customer(customer):
+def subscribe_thread(notifc_id, callback):
+    if callback is None:
+        asyncio.run(wc.subscribe(notifc_id, on_group_update))
+    else:
+        asyncio.run(wc.subscribe(notifc_id, callback))
+
+
+async def update_current_customer(customer, callback=None):
     global current_customer
     global current_notifc_id
     global current_subscribing_task
@@ -60,7 +65,7 @@ async def update_current_customer(customer):
     else:
         current_notifc_id = wc.create_notifc(wg.Group, subscribed_groups)
         current_subscribing_task = Thread(
-            target=subscribe_thread, args=(current_notifc_id,)).start()
+            target=subscribe_thread, args=(current_notifc_id, callback)).start()
 
 
 async def get_customer(c_phone):
@@ -120,8 +125,6 @@ async def create_group_with_param(g_name, g_description, c_phone, g_item_list):
     group.g_description = g_description
     group.g_status = wg.G_STATUS_OPEN
     group.g_items.extend(g_item_list)
-    print(g_item_list)
-    print(group.g_items)
 
     customer = wc.tx_get(tx_id, wg.Customer, c_phone)
     customer.c_owned_groups.append(g_id)
@@ -132,7 +135,7 @@ async def create_group_with_param(g_name, g_description, c_phone, g_item_list):
     wc.tx_put(tx_id, group)
     wc.tx_put(tx_id, customer)
 
-    meta.m_group_id = meta.m_group_id+1
+    meta.m_group_id = meta.m_group_id + 1
     wc.tx_put(tx_id, meta)
 
     wc.tx_commit(tx_id)
@@ -183,6 +186,10 @@ async def join_group_with_param(c_phone, g_id, g_p_item_list):
     return group
 
 
+async def get_group_info(g_id):
+    return wc.get(wg.Group, g_id)
+
+
 async def get_all_groups():
     more = True
     itr = 1
@@ -194,8 +201,6 @@ async def get_all_groups():
             all_groups.append(group)
         itr += 1
     return all_groups
-
-# TODO: bug: finish 后查看还是open
 
 
 async def finish_group_with_param(g_id):
