@@ -67,7 +67,7 @@ class InputItemWidget(QWidget):
 class CreateGroupWidget(QWidget):
 
     successed = pyqtSignal(wg.Customer)
-    item_id = 1
+    item_id = 0
     items = {}
 
     def __init__(self, customer: wg.Customer):
