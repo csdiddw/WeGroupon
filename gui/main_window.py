@@ -124,4 +124,5 @@ class GrouponMain(QMainWindow):
             self.login()
             return
         self.create_group_widget = CreateGroupWidget(self.customer)
+        self.create_group_widget.successed.connect(self.show_group_list)
         self.setCentralWidget(self.create_group_widget)

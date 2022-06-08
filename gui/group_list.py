@@ -106,7 +106,7 @@ class GroupInfoWidget(QWidget):
         for buy_item in self.buy_items:
             self.total_price += buy_item.g_p_count*buy_item.g_i_price
         self.sum_price_label = QLabel(f"总计: {self.total_price}元")
-        self.join_group_button = QPushButton("加入团购")
+        self.join_group_button = QPushButton("下单")
         self.join_group_button.clicked.connect(self.join_group)
         self.finish_group_button = QPushButton("提醒取货")
         self.finish_group_button.clicked.connect(self.finish_group)
