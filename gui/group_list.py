@@ -66,9 +66,13 @@ class GroupItemWidget(QWidget):
             self.unchecked.emit(self.buy_item)
     
     def number_chooser_changed(self):
+        if self.check_box.isChecked():
+            self.unchecked.emit(self.buy_item)
         self.buy_item.g_p_count = self.number_chooser.value()
         self.number_label.setText(f"{self.buy_item.g_p_count}")
         self.sum_price_label.setText(f"小计:{self.buy_item.g_p_count*self.group_item.g_i_price}元")
+        if self.check_box.isChecked():
+            self.checked.emit(self.buy_item)\
 
 
 class GroupInfoWidget(QWidget):
@@ -103,7 +107,10 @@ class GroupInfoWidget(QWidget):
         self.group_items_widget.setLayout(QVBoxLayout())
         self.total_price=0
         for buy_item in self.buy_items:
-            self.total_price += buy_item.g_p_count*buy_item.g_i_price
+            try:
+                self.total_price += buy_item.g_p_count*buy_item.g_i_price
+            except:
+                continue
         self.sum_price_label = QLabel(f"总计: {self.total_price}元")
         self.join_group_button = QPushButton("下单")
         self.join_group_button.clicked.connect(self.join_group)
@@ -180,11 +187,11 @@ class GroupListWidget(QWidget):
         print("join group")
         asyncio.run(services.join_group_with_param(
             self.customer.c_phone, group.g_id,items))
-        QMessageBox.information(self, '提示', '加入成功')
+        QMessageBox.information(self, '提示', '下单成功')
         self.successed.emit(self.customer)
 
     def finish_group(self, group: wg.Group):
         print("finish group")
         asyncio.run(services.finish_group_with_param(group.g_id))
-        QMessageBox.information(self, '提示', '团购已完成')
+        QMessageBox.information(self, '提示', '已提醒团员取货')
         self.successed.emit(self.customer)
