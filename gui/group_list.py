@@ -4,7 +4,6 @@ import wegroupon_pb2 as wg
 import services
 import asyncio
 
-# TODO: bug:团购列表过多导致无法显示
 
 
 class GroupItemWidget(QWidget):
