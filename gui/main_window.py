@@ -149,4 +149,4 @@ class GrouponMain(QMainWindow):
             QMessageBox.information(self, '提示', '您创建的团购有新的成员加入')
         if g_id in services.current_customer.c_participated_groups and \
                 group.g_status == wg.G_STATUS_FINISH:
-            QMessageBox.information(self, '提示', '您参与的团购已经结束')
+            QMessageBox.information(self, '提示', '您参与的团购已完成，请取货')
