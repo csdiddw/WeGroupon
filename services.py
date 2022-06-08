@@ -125,8 +125,6 @@ async def create_group_with_param(g_name, g_description, c_phone, g_item_list):
     group.g_description = g_description
     group.g_status = wg.G_STATUS_OPEN
     group.g_items.extend(g_item_list)
-    print(g_item_list)
-    print(group.g_items)
 
     customer = wc.tx_get(tx_id, wg.Customer, c_phone)
     customer.c_owned_groups.append(g_id)
@@ -137,7 +135,7 @@ async def create_group_with_param(g_name, g_description, c_phone, g_item_list):
     wc.tx_put(tx_id, group)
     wc.tx_put(tx_id, customer)
 
-    meta.m_group_id = meta.m_group_id+1
+    meta.m_group_id = meta.m_group_id + 1
     wc.tx_put(tx_id, meta)
 
     wc.tx_commit(tx_id)
@@ -186,6 +184,10 @@ async def join_group_with_param(c_phone, g_id, g_p_item_list):
     utils.print_group(group)
 
     return group
+
+
+async def get_group_info(g_id):
+    return wc.get(wg.Group, g_id)
 
 
 async def get_all_groups():
