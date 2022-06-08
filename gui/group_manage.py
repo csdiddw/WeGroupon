@@ -79,7 +79,7 @@ class CreateGroupWidget(QWidget):
         item.g_i_name = self.item_edit.text()
         item.g_i_description = self.item_description_edit.text()
         item.g_i_count = int(self.item_count_edit.text())
-        item.g_i_price = int(self.item_price_edit.text())
+        item.g_i_price = float(self.item_price_edit.text())
         g_item_list.append(item)
         asyncio.run(services.create_group_with_param(
             g_name, g_description, c_phone, g_item_list))
