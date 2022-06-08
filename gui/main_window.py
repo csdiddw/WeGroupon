@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QMainWindow, QPushButton, QGridLayout, QWidget
 from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtGui import QAction
+from PyQt6.QtGui import QAction, QIcon
 from gui.account import RegisterWidget, LoginWidget, UserInfoWidget
 from gui.group_list import GroupListWidget
 from gui.group_manage import CreateGroupWidget
@@ -45,8 +45,9 @@ class GrouponMain(QMainWindow):
 
     def init_ui(self):
         self.statusBar().showMessage("欢迎使用WeGroupon")
-        self.setGeometry(300, 300, 300, 200)
+        self.setGeometry(300, 300, 600, 600)
         self.setWindowTitle('WeGroupon')
+        self.setWindowIcon(QIcon('./resources/common/icon.svg'))
 
         showUserInfoAct = QAction('用户信息', self)
         showUserInfoAct.triggered.connect(self.show_user_info)
